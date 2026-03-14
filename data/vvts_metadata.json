@@ -1,0 +1,14 @@
+{
+  "airport_name": "Tan Son Nhat International Airport",
+  "icao": "VVTS",
+  "map_dimensions": {"width": 800, "height": 600},
+  "waypoints": {
+    "STAND_A1": {"x": 680, "y": 420, "label": "Stand A1"},
+    "STAND_A2": {"x": 700, "y": 420, "label": "Stand A2"},
+    "TAXIWAY_W6": {"x": 100, "y": 500, "label": "W6"},
+    "TAXIWAY_E1": {"x": 720, "y": 180, "label": "E1"},
+    "HOLDING_POINT_25L": {"x": 880, "y": 120, "label": "Holding Point 25L"},
+    "RUNWAY_25L_START": {"x": 900, "y": 120, "label": "RWY 25L Search"},
+    "RUNWAY_25L_END": {"x": 100, "y": 380, "label": "RWY 25L End"}
+  }
+}

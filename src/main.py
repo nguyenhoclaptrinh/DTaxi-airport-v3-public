@@ -24,8 +24,9 @@ class DTaxiApp:
     def setup(self):
         """Khởi phối dữ liệu ban đầu."""
         scenario_path = os.path.join("data", "scenarios", "departure_sample.json")
+        metadata_path = os.path.join("data", "vvts_metadata.json")
         try:
-            current_step = self.scenario_manager.load_scenario(scenario_path)
+            current_step = self.scenario_manager.load_scenario(scenario_path, metadata_path)
             self.map_renderer.init_pygame()
             
             # Khởi tạo thực thể máy bay từ kịch bản
