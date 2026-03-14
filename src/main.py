@@ -90,29 +90,41 @@ class DTaxiApp:
     def run(self):
         self.setup()
         
-        while self.running:
-            # 1. Cửa sổ Pygame
-            delta_time = self.clock.tick(60) / 1000.0 # Giới hạn 60 FPS
-            
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.running = False
-            
-            # Cập nhật vị trí máy bay
-            for entity in self.aircraft_entities:
-                entity.update(delta_time)
-            
-            # Vẽ Map
-            self.map_renderer.draw(self.aircraft_entities, self.scenario_manager.get_current_step())
-            
-            # 2. Cửa sổ UI (CustomTkinter)
-            try:
-                self.ui_manager.run_step()
-            except Exception:
-                # Nếu cửa sổ UI bị đóng
-                self.running = False
-
+        # Bắt đầu vòng lặp đồ họa thông qua Tkinter after
+        self.update_loop()
+        
+        # Giao quyền điều khiển chính cho Tkinter Mainloop
+        # Điều này giúp tránh lỗi GIL vì Tkinter sẽ quản lý thread chính ổn định hơn
+        self.ui_manager.root.mainloop()
+        
+        # Khi thoát mainloop (đóng cửa sổ UI)
+        self.running = False
         pygame.quit()
+
+    def update_loop(self):
+        """Vòng lặp cập nhật được gọi bởi Tkinter after."""
+        if not self.running:
+            return
+
+        # 1. Cập nhật Pygame
+        delta_time = self.clock.tick(60) / 1000.0
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.running = False
+                self.ui_manager.root.destroy()
+                return
+
+        # Cập nhật Logic & Vật lý
+        for entity in self.aircraft_entities:
+            entity.update(delta_time)
+        
+        # Vẽ Map
+        self.map_renderer.draw(self.aircraft_entities, self.scenario_manager.get_current_step())
+        
+        # 2. Lên lịch cho lần cập nhật tiếp theo (khoảng 16ms ~ 60FPS)
+        if self.running:
+            self.ui_manager.root.after(16, self.update_loop)
 
 if __name__ == "__main__":
     app = DTaxiApp()

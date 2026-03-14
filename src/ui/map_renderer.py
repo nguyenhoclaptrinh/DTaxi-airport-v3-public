@@ -34,43 +34,42 @@ class MapRenderer:
         map_path = os.path.join("assets", "images", "airport_map.png")
         if os.path.exists(map_path):
             self.background_image = pygame.image.load(map_path)
-            # Resize map để khớp với cửa sổ nếu cần
             self.background_image = pygame.transform.scale(self.background_image, (self.width, self.height))
         
         ac_path = os.path.join("assets", "images", "aircraft_icon.png")
         if os.path.exists(ac_path):
-            self.aircraft_icon = pygame.image.load(ac_path)
+            # Sửa lỗi: Sử dụng convert_alpha() để giữ độ trong suốt chuẩn
+            self.aircraft_icon = pygame.image.load(ac_path).convert_alpha()
+            # Cấu hình kích thước icon (Người dùng có thể chỉnh sửa số này để phù hợp với bản đồ thực tế)
+            icon_size = (32, 32) 
+            self.aircraft_icon = pygame.transform.scale(self.aircraft_icon, icon_size)
         else:
-            # Tạo icon tạm thời nếu không có file ảnh
             self.aircraft_icon = pygame.Surface((30, 30), pygame.SRCALPHA)
             pygame.draw.polygon(self.aircraft_icon, (255, 200, 0), [(15, 0), (30, 30), (15, 22), (0, 30)])
 
     def draw(self, aircraft_entities, current_step=None):
         """Vẽ toàn bộ các thành phần lên màn hình."""
-        # 1. Vẽ nền
         if self.background_image:
             self.screen.blit(self.background_image, (0, 0))
         else:
             self.screen.fill(self.COLOR_BG)
 
-        # 2. Vẽ lộ trình của bước hiện tại (nếu có)
         if current_step and 'path' in current_step:
             path = current_step['path']
             if len(path) > 1:
                 points = [(p['x'], p['y']) for p in path]
                 pygame.draw.lines(self.screen, self.COLOR_PATH, False, points, 2)
 
-        # 3. Vẽ các máy bay
         for ac in aircraft_entities:
-            # Xoay icon theo hướng máy bay
-            # Lưu ý: Pygame xoay ngược chiều kim đồng hồ, angle của ta là thuận chiều kim đồng hồ từ trục X
+            # Sửa lỗi: Xoay icon và lấy Rect tại tâm (Center) để chuyển động chính xác
             rotated_icon = pygame.transform.rotate(self.aircraft_icon, -ac.angle)
+            # Lấy rect của ảnh sau khi xoay và đặt tâm vào đúng tọa độ máy bay
             rect = rotated_icon.get_rect(center=(ac.x, ac.y))
             self.screen.blit(rotated_icon, rect.topleft)
             
-            # Vẽ Callsign
             font = pygame.font.SysFont("Arial", 14, bold=True)
             label = font.render(ac.callsign, True, (0, 255, 0))
+            # Đặt label cạnh máy bay
             self.screen.blit(label, (ac.x + 20, ac.y - 10))
 
         pygame.display.flip()
