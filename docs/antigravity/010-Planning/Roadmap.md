@@ -5,7 +5,7 @@ Dự án tập trung vào việc xây dựng một hệ thống mô phỏng giao
 ## Giai đoạn 1: Thiết kế & Chuẩn bị (Tuần 1 - Tuần 2)
 - [x] **Hoàn thiện Đặc tả (PRD & SDD):** Chuyển đổi các yêu cầu thành tài liệu thiết kế kỹ thuật tinh giản.
 - [x] **Thiết kế Kịch bản mẫu:** Soạn thảo 9 bước cất cánh và 9 bước hạ cánh dựa trên chuẩn ICAO phraseology (Tiếng Anh).
-- [ ] **Lựa chọn Stack công nghệ:** Quyết định thư viện Visualization (Đề xuất: `Pygame` cho đồ họa 2D hoặc `CustomTkinter` cho UI hiện đại).
+- [x] **Lựa chọn Stack công nghệ:** Quyết định thư viện Visualization (Đề xuất: `Pygame` cho đồ họa 2D hoặc `CustomTkinter` cho UI hiện đại).
 
 ## Giai đoạn 2: Phát triển Core Engine (Tuần 3 - Tuần 4)
 - [ ] **Module Kịch bản (Scenario Engine):** Trình đọc file JSON kịch bản, quản lý trạng thái Next/Prev/Stop/Continue.
