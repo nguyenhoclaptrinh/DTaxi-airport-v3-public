@@ -24,6 +24,19 @@ class AircraftEntity:
         self.current_speed = float(speed)
         self.is_moving = len(self.target_path) > 0
 
+    def teleport(self, pos):
+        """Nhảy vọt máy bay đến vị trí mới và dừng mọi hành trình cũ."""
+        self.x = float(pos['x'])
+        self.y = float(pos['y'])
+        self.target_path = []
+        self.is_moving = False
+
+    def complete_path(self):
+        """Lập tức hoàn thành hành trình hiện tại (nhảy đến waypoint cuối cùng)."""
+        if self.target_path:
+            last_target = self.target_path[-1]
+            self.teleport(last_target)
+
     def update(self, delta_time):
         """
         Cập nhật vị trí dựa trên Delta Time và lộ trình.

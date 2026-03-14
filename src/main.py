@@ -41,7 +41,7 @@ class DTaxiApp:
             print(f"Setup Error: {e}")
             sys.exit(1)
 
-    def _trigger_step_actions(self, step):
+    def _trigger_step_actions(self, step, start_movement=True):
         """Kích hoạt hành động và tin nhắn khi chuyển bước."""
         if not step:
             return
@@ -50,29 +50,47 @@ class DTaxiApp:
         for msg in step.get('messages', []):
             self.ui_manager.add_log(msg['sender'], msg['text'], msg.get('target'))
             
-        # 2. Kích hoạt di chuyển cho máy bay active
-        ac_id = step.get('active_aircraft')
-        if ac_id:
-            for entity in self.aircraft_entities:
-                if entity.id == ac_id:
-                    entity.set_path(step['path'], step['speed'])
+        # 2. Kích hoạt di chuyển cho máy bay active (nếu được phép)
+        if start_movement:
+            ac_id = step.get('active_aircraft')
+            if ac_id:
+                for entity in self.aircraft_entities:
+                    if entity.id == ac_id:
+                        entity.set_path(step['path'], step['speed'])
 
     def handle_next(self):
+        # 1. Hoàn thành hành động của bước hiện tại trước khi sang bước mới
+        current_step = self.scenario_manager.get_current_step()
+        if current_step:
+            ac_id = current_step.get('active_aircraft')
+            if ac_id:
+                for entity in self.aircraft_entities:
+                    if entity.id == ac_id:
+                        entity.complete_path()
+
+        # 2. Chuyển sang bước tiếp theo
         step = self.scenario_manager.next_step()
         if step:
-            self._trigger_step_actions(step)
+            self._trigger_step_actions(step, start_movement=True)
             self.ui_manager.set_status(f"Step {step['id']}: {step['label']}")
         else:
             self.ui_manager.set_status("Kịch bản đã hoàn thành.")
 
     def handle_prev(self):
-        # Lưu ý: Logic Prev thực tế cần reset vị trí máy bay về đầu bước trước
+        # 1. Quay lại bước trước đó
         step = self.scenario_manager.prev_step()
         if step:
-            self.ui_manager.clear_log() # Hoặc giữ lại tùy thiết kế
-            # Trong mô phỏng đơn giản, ta Reset vị trí về đầu kịch bản hoặc vị trí bước trước
-            # TODO: Hoàn thiện logic quay lui vị trí chính xác
-            self._trigger_step_actions(step)
+            # 2. Đưa máy bay về điểm xuất phát của bước này
+            ac_id = step.get('active_aircraft')
+            if ac_id and 'path' in step and step['path']:
+                start_pos = step['path'][0]
+                for entity in self.aircraft_entities:
+                    if entity.id == ac_id:
+                        entity.teleport(start_pos)
+
+            self.ui_manager.clear_log() 
+            # 3. Chỉ hiện tin nhắn, KHÔNG tự động di chuyển
+            self._trigger_step_actions(step, start_movement=False)
             self.ui_manager.set_status(f"Back to Step {step['id']}")
 
     def handle_reset(self):
@@ -90,12 +108,11 @@ class DTaxiApp:
 
     def run(self):
         self.setup()
-        
+        self._last_time = time.perf_counter()
         # Bắt đầu vòng lặp đồ họa thông qua Tkinter after
         self.update_loop()
         
         # Giao quyền điều khiển chính cho Tkinter Mainloop
-        # Điều này giúp tránh lỗi GIL vì Tkinter sẽ quản lý thread chính ổn định hơn
         self.ui_manager.root.mainloop()
         
         # Khi thoát mainloop (đóng cửa sổ UI)
@@ -103,29 +120,36 @@ class DTaxiApp:
         pygame.quit()
 
     def update_loop(self):
-        """Vòng lặp cập nhật được gọi bởi Tkinter after."""
+        """Vòng lặp cập nhật an toàn với GIL."""
         if not self.running:
             return
 
-        # 1. Cập nhật Pygame
-        delta_time = self.clock.tick(60) / 1000.0
-        
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.running = False
-                self.ui_manager.root.destroy()
-                return
+        try:
+            # 1. Tính toán delta_time thủ công để tránh gọi clock.tick() gây giải phóng GIL
+            now = time.perf_counter()
+            delta_time = now - self._last_time
+            self._last_time = now
+            
+            # Đảm bảo delta_time không quá lớn (ví dụ khi treo máy)
+            delta_time = min(delta_time, 0.1) 
 
-        # Cập nhật Logic & Vật lý
-        for entity in self.aircraft_entities:
-            entity.update(delta_time)
+            # 2. Xử lý sự kiện Pygame tối giản
+            # Dùng pump() để duy trì phản hồi cửa sổ mà không cần loop qua event queue
+            pygame.event.pump()
+
+            # 3. Cập nhật Logic
+            for entity in self.aircraft_entities:
+                entity.update(delta_time)
+            
+            # 4. Vẽ Map
+            self.map_renderer.draw(self.aircraft_entities, self.scenario_manager.get_current_step())
+            
+        except Exception as e:
+            print(f"Update Loop Warning: {e}")
         
-        # Vẽ Map
-        self.map_renderer.draw(self.aircraft_entities, self.scenario_manager.get_current_step())
-        
-        # 2. Lên lịch cho lần cập nhật tiếp theo (khoảng 16ms ~ 60FPS)
+        # 5. Lên lịch cho lần cập nhật tiếp theo (khoảng 20ms ~ 50FPS để giảm tải)
         if self.running:
-            self.ui_manager.root.after(16, self.update_loop)
+            self.ui_manager.root.after(20, self.update_loop)
 
 if __name__ == "__main__":
     app = DTaxiApp()

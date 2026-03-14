@@ -18,29 +18,30 @@ class MapRenderer:
         self.COLOR_TEXT = (255, 255, 255)
 
     def init_pygame(self, embed_window_id=None):
-        """Khởi tạo Pygame. Hỗ trợ nhúng vào cửa sổ khác nếu cần."""
+        """Khởi tạo Pygame display và font."""
         if embed_window_id:
             os.environ['SDL_WINDOWID'] = str(embed_window_id)
-            os.environ['SDL_VIDEODRIVER'] = 'windib' # Cần thiết cho Windows khi nhúng
+            os.environ['SDL_VIDEODRIVER'] = 'windib'
 
-        pygame.init()
+        pygame.display.init()
+        pygame.font.init()
         self.screen = pygame.display.set_mode((self.width, self.height))
         pygame.display.set_caption("DTaxi - Airport Visualization")
         
         self.load_assets()
+        # Khởi tạo font một lần duy nhất
+        self.label_font = pygame.font.SysFont("Arial", 14, bold=True)
 
     def load_assets(self):
         """Tải các tệp hình ảnh."""
         map_path = os.path.join("assets", "images", "airport_map.png")
         if os.path.exists(map_path):
-            self.background_image = pygame.image.load(map_path)
+            self.background_image = pygame.image.load(map_path).convert()
             self.background_image = pygame.transform.scale(self.background_image, (self.width, self.height))
         
         ac_path = os.path.join("assets", "images", "aircraft_icon.png")
         if os.path.exists(ac_path):
-            # Sửa lỗi: Sử dụng convert_alpha() để giữ độ trong suốt chuẩn
             self.aircraft_icon = pygame.image.load(ac_path).convert_alpha()
-            # Cấu hình kích thước icon (Người dùng có thể chỉnh sửa số này để phù hợp với bản đồ thực tế)
             icon_size = (32, 32) 
             self.aircraft_icon = pygame.transform.scale(self.aircraft_icon, icon_size)
         else:
@@ -49,6 +50,9 @@ class MapRenderer:
 
     def draw(self, aircraft_entities, current_step=None):
         """Vẽ toàn bộ các thành phần lên màn hình."""
+        if not self.screen:
+            return
+
         if self.background_image:
             self.screen.blit(self.background_image, (0, 0))
         else:
@@ -61,15 +65,12 @@ class MapRenderer:
                 pygame.draw.lines(self.screen, self.COLOR_PATH, False, points, 2)
 
         for ac in aircraft_entities:
-            # Sửa lỗi: Xoay icon và lấy Rect tại tâm (Center) để chuyển động chính xác
             rotated_icon = pygame.transform.rotate(self.aircraft_icon, -ac.angle)
-            # Lấy rect của ảnh sau khi xoay và đặt tâm vào đúng tọa độ máy bay
             rect = rotated_icon.get_rect(center=(ac.x, ac.y))
             self.screen.blit(rotated_icon, rect.topleft)
             
-            font = pygame.font.SysFont("Arial", 14, bold=True)
-            label = font.render(ac.callsign, True, (0, 255, 0))
-            # Đặt label cạnh máy bay
+            # Sử dụng font đã cache
+            label = self.label_font.render(ac.callsign, True, (0, 255, 0))
             self.screen.blit(label, (ac.x + 20, ac.y - 10))
 
-        pygame.display.flip()
+        pygame.display.update() # update() thường nhẹ hơn flip() trong một số trường hợp
