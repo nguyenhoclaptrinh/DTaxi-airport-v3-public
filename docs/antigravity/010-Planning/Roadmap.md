@@ -8,14 +8,14 @@ Dự án tập trung vào việc xây dựng một hệ thống mô phỏng giao
 - [x] **Lựa chọn Stack công nghệ:** Quyết định thư viện Visualization (Đề xuất: `Pygame` cho đồ họa 2D hoặc `CustomTkinter` cho UI hiện đại).
 
 ## Giai đoạn 2: Phát triển Core Engine (Tuần 3 - Tuần 4)
-- [ ] **Module Kịch bản (Scenario Engine):** Trình đọc file JSON kịch bản, quản lý trạng thái Next/Prev/Stop/Continue.
-- [ ] **Module AeroMACS Simulator:** Logic truyền nhận tin nhắn (Plain text), giả lập độ trễ AeroMACS.
-- [ ] **Mô hình hóa Sân bay:** Xây dựng sơ đồ sân bay bằng tọa độ XY đơn giản.
+- [x] **Module Kịch bản (Scenario Engine):** Trình đọc file JSON kịch bản, quản lý trạng thái Next/Prev/Stop/Continue.
+- [x] **Module AeroMACS Simulator:** Logic truyền nhận tin nhắn (Plain text), tích hợp vào Log.
+- [x] **Mô hình hóa Sân bay:** Xây dựng sơ đồ sân bay Tân Sơn Nhất (VVTS) thực tế.
 
 ## Giai đoạn 3: Hiện thực hóa UI & Log (Tuần 5 - Tuần 6)
-- [ ] **Màn hình Tổng quát:** Hiển thị sơ đồ sân bay và vị trí các máy bay (PC-1, PC-2...).
-- [ ] **Màn hình Log (Pilot & ATC):** Hiển thị luồng trao đổi tin nhắn thời gian thực.
-- [ ] **Điều khiển:** Gắn các sự kiện nút bấm vào logic chạy kịch bản.
+- [x] **Màn hình Tổng quát:** Hiển thị sơ đồ sân bay và vị trí máy bay di chuyển mượt mà (Lerp).
+- [x] **Màn hình Log (Pilot & ATC):** Hiển thị luồng trao đổi tin nhắn AeroMACS scrollable.
+- [x] **Điều khiển:** Nút bấm điều hướng kịch bản (Next/Prev/Reset).
 
 ## Giai đoạn 4: Kiểm thử & Đóng gói (Tuần 7)
 - [ ] **Validation:** Chạy thử toàn bộ kịch bản từ đầu đến cuối.
