@@ -1,21 +1,25 @@
 import pygame
 import os
 
+
 class MapRenderer:
     """
     Xử lý việc vẽ bản đồ sân bay và các thực thể máy bay bằng Pygame.
     """
+
     def __init__(self, width=800, height=600):
         self.width = width
         self.height = height
         self.screen = None
         self.background_image = None
         self.aircraft_icon = None
-        
+        self.debug_mode = True  # Thống nhất debug mode
+
         # Màu sắc cơ bản
-        self.COLOR_BG = (30, 30, 30) # Dark theme
+        self.COLOR_BG = (30, 30, 30)  # Dark theme
         self.COLOR_PATH = (100, 100, 100)
         self.COLOR_TEXT = (255, 255, 255)
+        self.COLOR_DEBUG = (255, 0, 255)  # Pink for debug
 
     def init_pygame(self, embed_window_id=None):
         """Khởi tạo Pygame display và font."""
@@ -27,29 +31,38 @@ class MapRenderer:
         pygame.font.init()
         self.screen = pygame.display.set_mode((self.width, self.height))
         pygame.display.set_caption("DTaxi - Airport Visualization")
-        
+
         self.load_assets()
         # Khởi tạo font một lần duy nhất
         self.label_font = pygame.font.SysFont("Arial", 14, bold=True)
 
     def load_assets(self):
         """Tải các tệp hình ảnh."""
-        map_path = os.path.join("assets", "images", "airport_map.png")
-        if os.path.exists(map_path):
-            self.background_image = pygame.image.load(map_path).convert()
-            self.background_image = pygame.transform.scale(self.background_image, (self.width, self.height))
-        
+        # Ưu tiên tsn_airport_map.jpg, nếu không có thì dùng airport_map.png
+        map_path_jpg = os.path.join("assets", "images", "tsn_airport_map.jpg")
+        map_path_png = os.path.join("assets", "images", "airport_map.png")
+
+        target_path = map_path_jpg if os.path.exists(
+            map_path_jpg) else map_path_png
+
+        if os.path.exists(target_path):
+            self.background_image = pygame.image.load(target_path).convert()
+            self.background_image = pygame.transform.scale(
+                self.background_image, (self.width, self.height))
+
         ac_path = os.path.join("assets", "images", "aircraft_icon.png")
         if os.path.exists(ac_path):
             self.aircraft_icon = pygame.image.load(ac_path).convert_alpha()
-            icon_size = (32, 32) 
-            self.aircraft_icon = pygame.transform.scale(self.aircraft_icon, icon_size)
+            icon_size = (32, 32)
+            self.aircraft_icon = pygame.transform.scale(
+                self.aircraft_icon, icon_size)
         else:
             self.aircraft_icon = pygame.Surface((30, 30), pygame.SRCALPHA)
-            pygame.draw.polygon(self.aircraft_icon, (255, 200, 0), [(15, 0), (30, 30), (15, 22), (0, 30)])
+            pygame.draw.polygon(self.aircraft_icon, (255, 200, 0), [
+                                (15, 0), (30, 30), (15, 22), (0, 30)])
 
-    def draw(self, aircraft_entities, current_step=None):
-        """Vẽ toàn bộ các thành phần lên màn hình."""
+    def draw(self, aircraft_entities, active_path=None):
+        """Ve toan bo cac thanh phan len man hinh."""
         if not self.screen:
             return
 
@@ -58,19 +71,21 @@ class MapRenderer:
         else:
             self.screen.fill(self.COLOR_BG)
 
-        if current_step and 'path' in current_step:
-            path = current_step['path']
-            if len(path) > 1:
-                points = [(p['x'], p['y']) for p in path]
-                pygame.draw.lines(self.screen, self.COLOR_PATH, False, points, 2)
+        # Ve Path dang active
+        if active_path and len(active_path) > 1:
+            points = [(int(p["x"]), int(p["y"])) for p in active_path]
+            pygame.draw.lines(self.screen, (255, 220, 0), False, points, 2)
+            for p in points:
+                pygame.draw.circle(self.screen, (255, 140, 0), p, 4)
 
+        # Ve may bay
         for ac in aircraft_entities:
-            rotated_icon = pygame.transform.rotate(self.aircraft_icon, -ac.angle)
-            rect = rotated_icon.get_rect(center=(ac.x, ac.y))
+            rotated_icon = pygame.transform.rotate(
+                self.aircraft_icon, -ac.angle)
+            rect = rotated_icon.get_rect(center=(int(ac.x), int(ac.y)))
             self.screen.blit(rotated_icon, rect.topleft)
-            
-            # Sử dụng font đã cache
-            label = self.label_font.render(ac.callsign, True, (0, 255, 0))
-            self.screen.blit(label, (ac.x + 20, ac.y - 10))
 
-        pygame.display.update() # update() thường nhẹ hơn flip() trong một số trường hợp
+            label = self.label_font.render(ac.callsign, True, (0, 255, 0))
+            self.screen.blit(label, (int(ac.x) + 20, int(ac.y) - 10))
+
+        pygame.display.update()

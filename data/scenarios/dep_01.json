@@ -1,0 +1,80 @@
+{
+    "scenario_id": "DEP-01",
+    "scenario_name": "Standard Departure - VietJet",
+    "airport_id": "VVTS",
+    "aircraft_list": [
+        {
+            "id": "PC01",
+            "callsign": "VIETJET 123",
+            "type": "A321",
+            "initial_pos": { "x": 0, "y": 0 }
+        }
+    ],
+    "steps": [
+        {
+            "id": 1,
+            "type": "MESSAGE",
+            "sender": "PC01",
+            "target": "ATC",
+            "text": "TAN SON NHAT GROUND, VIETJET 123, POSITION STAND 1, READY FOR PUSHBACK AND START UP, INFORMATION ALPHA."
+        },
+        {
+            "id": 2,
+            "type": "MESSAGE",
+            "sender": "ATC",
+            "target": "PC01",
+            "text": "VIETJET 123, TAN SON NHAT GROUND, PUSHBACK AND START UP APPROVED, FACING SOUTH."
+        },
+        {
+            "id": 3,
+            "type": "MESSAGE",
+            "sender": "PC01",
+            "target": "ATC",
+            "text": "ROGER, PUSHBACK AND START UP APPROVED, FACING SOUTH, VIETJET 123."
+        },
+        {
+            "id": 4,
+            "type": "ACTION",
+            "aircraft": "PC01",
+            "action": "ROTATE",
+            "value": 180
+        },
+        {
+            "id": 5,
+            "type": "ACTION",
+            "aircraft": "PC01",
+            "action": "MOVE_ALONG_PATH",
+            "path_name": "Pushback_South",
+            "speed": 2
+        },
+        {
+            "id": 6,
+            "type": "MESSAGE",
+            "sender": "PC01",
+            "target": "ATC",
+            "text": "GROUND, VIETJET 123, READY TO TAXI."
+        },
+        {
+            "id": 7,
+            "type": "MESSAGE",
+            "sender": "ATC",
+            "target": "PC01",
+            "text": "VIETJET 123, TAXI TO HOLDING POINT RUNWAY 07R VIA ALPHA."
+        },
+        {
+            "id": 8,
+            "type": "MESSAGE",
+            "sender": "PC01",
+            "target": "ATC",
+            "text": "TAXI TO HOLDING POINT RUNWAY 07R VIA ALPHA, VIETJET 123."
+        },
+        {
+            "id": 9,
+            "type": "ACTION",
+            "aircraft": "PC01",
+            "action": "MOVE_ALONG_PATH",
+            "path_name": "Taxi_to_RWY07R",
+            "speed": 5
+        }
+    ]
+}

@@ -4,25 +4,33 @@ class WindowManager:
     """
     Quản lý giao diện người dùng (Logs, Controls) bằng CustomTkinter.
     """
-    def __init__(self, on_next, on_prev, on_reset):
+    def __init__(self, on_next, on_prev, on_reset, on_scenario_change):
         self.root = ctk.CTk()
         self.root.title("DTaxi - AeroMACS Controller")
-        self.root.geometry("400x700")
+        self.root.geometry("400x750")
         
         # Callbacks
         self.on_next = on_next
         self.on_prev = on_prev
         self.on_reset = on_reset
+        self.on_scenario_change = on_scenario_change
         
         self._setup_ui()
 
     def _setup_ui(self):
-        # 1. Tiêu đề
+        # 1. Tiêu đề & Chọn kịch bản
         self.label_title = ctk.CTkLabel(self.root, text="AeroMACS LOG", font=("Roboto", 20, "bold"))
-        self.label_title.pack(pady=20)
+        self.label_title.pack(pady=(20, 5))
+
+        self.scenario_selector = ctk.CTkOptionMenu(
+            self.root, 
+            values=["Departure Scenario", "Arrival Scenario", "Multi-aircraft Scenario"],
+            command=self.on_scenario_change
+        )
+        self.scenario_selector.pack(pady=10)
 
         # 2. Khung Log (Scrollable)
-        self.log_box = ctk.CTkTextbox(self.root, width=360, height=450, font=("Consolas", 12))
+        self.log_box = ctk.CTkTextbox(self.root, width=360, height=400, font=("Consolas", 12))
         self.log_box.pack(padx=20, pady=10)
         self.log_box.configure(state="disabled") # Chỉ đọc
 
