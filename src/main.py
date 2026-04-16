@@ -35,12 +35,30 @@ class DTaxiApp:
         """Khoi phoi du lieu ban dau."""
         try:
             self.map_renderer.init_pygame()
-            self.load_scenario("example-catcanh.json")
+            
+            # Quet danh sach kich ban thuc te
+            scenarios = self.get_available_scenarios()
+            self.ui_manager.set_scenario_list(scenarios)
+
+            if scenarios:
+                self.load_scenario(scenarios[0])
+            else:
+                self.ui_manager.set_status("❌ Error: No scenarios found in data/scenarios")
+                
         except Exception as e:
             print(f"Setup Error: {e}")
             import traceback
             traceback.print_exc()
-            sys.exit(1)
+            # Khong sys.exit nua de user co the reload sau khi fix file
+            self.ui_manager.set_status(f"Critical Error: {str(e)}")
+
+    def get_available_scenarios(self) -> list[str]:
+        """Lay danh sach cac file .json trong thu muc scenarios."""
+        if not os.path.exists(self.SCENARIO_DIR):
+            return []
+        
+        files = [f for f in os.listdir(self.SCENARIO_DIR) if f.endswith(".json")]
+        return sorted(files)
 
     def load_scenario(self, filename: str):
         """Tai kich ban tu ten file."""

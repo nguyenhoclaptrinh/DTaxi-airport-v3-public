@@ -25,7 +25,7 @@ class WindowManager:
 
         self.scenario_selector = ctk.CTkOptionMenu(
             self.root, 
-            values=["Departure Scenario", "Arrival Scenario", "Multi-aircraft Scenario"],
+            values=["(Đang quét kịch bản...)"],
             command=self.on_scenario_change
         )
         self.scenario_selector.pack(pady=10)
@@ -86,6 +86,18 @@ class WindowManager:
 
     def set_status(self, text):
         self.status_label.configure(text=text)
+
+    def set_scenario_list(self, files: list[str], current: str = None):
+        """Cập nhật danh sách kịch bản vào Dropdown."""
+        if not files:
+            self.scenario_selector.configure(values=["(Không tìm thấy kịch bản)"], state="disabled")
+            return
+            
+        self.scenario_selector.configure(values=files, state="normal")
+        if current and current in files:
+            self.scenario_selector.set(current)
+        else:
+            self.scenario_selector.set(files[0])
 
     def clear_log(self):
         self.log_box.configure(state="normal")
