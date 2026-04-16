@@ -80,8 +80,10 @@ class MapRenderer:
 
         # Ve may bay
         for ac in aircraft_entities:
+            # Bù góc -90 độ vì icon gốc hướng lên trên (North), 
+            # trong khi logic di chuyển coi 0 độ là bên phải (East).
             rotated_icon = pygame.transform.rotate(
-                self.aircraft_icon, -ac.angle)
+                self.aircraft_icon, -ac.angle - 90)
             rect = rotated_icon.get_rect(center=(int(ac.x), int(ac.y)))
             self.screen.blit(rotated_icon, rect.topleft)
 
