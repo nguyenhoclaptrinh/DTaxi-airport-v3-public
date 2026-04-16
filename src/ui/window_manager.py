@@ -7,7 +7,7 @@ class WindowManager:
     def __init__(self, on_next, on_prev, on_reset, on_stop, on_scenario_change):
         self.root = ctk.CTk()
         self.root.title("DTaxi - AeroMACS Controller")
-        self.root.geometry("400x750")
+        self.root.geometry("400x744")
         
         # Callbacks
         self.on_next = on_next

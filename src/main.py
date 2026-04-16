@@ -15,7 +15,7 @@ class DTaxiApp:
 
     def __init__(self):
         self.scenario_manager = ScenarioManager()
-        self.map_renderer = MapRenderer(800, 600)
+        self.map_renderer = MapRenderer(1200, 744)
         self.ui_manager = WindowManager(
             on_next=self.handle_next,
             on_prev=self.handle_prev,
