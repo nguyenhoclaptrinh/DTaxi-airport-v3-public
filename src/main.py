@@ -78,6 +78,7 @@ class DTaxiApp:
             self.aircraft_entities.append(entity)
 
         self.ui_manager.clear_log()
+        # Voi index -1, setup ban dau se khong goi _apply_step hoac chi goi de show 'Ready'
         self._apply_step(current_step, start_movement=False)
 
         info = self.scenario_manager.get_scenario_info()
@@ -89,7 +90,10 @@ class DTaxiApp:
     def _apply_step(self, step: dict | None, start_movement: bool = True, add_to_log: bool = True):
         """Ap dung noi dung cua mot step nguyen tu."""
         if not step:
-            self.ui_manager.set_status("Kich ban da ket thuc.")
+            if self.scenario_manager.current_step_index == -1:
+                self.ui_manager.set_status("Sẵn sàng bắt đầu kịch bản. Nhấn NEXT.")
+            else:
+                self.ui_manager.set_status("Kịch bản đã kết thúc.")
             return
 
         step_type = step.get("type")
@@ -156,23 +160,31 @@ class DTaxiApp:
 
     def handle_prev(self):
         """Quay lai step truoc."""
-        # Neu step hien tai la MESSAGE hoac ACTION, xoa khoi log truoc khi lui
         current = self.scenario_manager.get_current_step()
-        if current and current.get("type") in ["MESSAGE", "ACTION"]:
-            self.ui_manager.remove_last_log()
+        if not current:
+            return
 
+        # 1. Hoan tac (Undo) step HIEN TAI
+        if current.get("type") in ["MESSAGE", "ACTION"]:
+            self.ui_manager.remove_last_log()
+            
+        if current.get("type") == "ACTION" and current.get("action") == "MOVE_ALONG_PATH":
+            path_coords = self.scenario_manager.resolve_path(current.get("path_name", ""))
+            if path_coords:
+                ac_id = current.get("aircraft")
+                for entity in self.aircraft_entities:
+                    if entity.id == ac_id:
+                        # Quay ve diem BAT DAU cua path (Undo move)
+                        entity.teleport(path_coords[0])
+
+        # 2. Lui pointer
         step = self.scenario_manager.prev_step()
+        
+        # 3. Hien thi status cua step moi (nhung khong move hay ghi log)
         if step:
-            # Dua may bay ve dau path neu la MOVE action
-            if step.get("type") == "ACTION" and step.get("action") == "MOVE_ALONG_PATH":
-                path_coords = self.scenario_manager.resolve_path(
-                    step.get("path_name", ""))
-                if path_coords:
-                    ac_id = step.get("aircraft")
-                    for entity in self.aircraft_entities:
-                        if entity.id == ac_id:
-                            entity.teleport(path_coords[0])
             self._apply_step(step, start_movement=False, add_to_log=False)
+        else:
+            self.ui_manager.set_status("Sẵn sàng bắt đầu kịch bản.")
 
     def handle_stop(self):
         """Tam dung tai step hien tai."""
@@ -183,14 +195,20 @@ class DTaxiApp:
 
     def handle_reset(self):
         """Dat lai kich ban."""
-        step = self.scenario_manager.reset()
+        self.scenario_manager.reset()
         for entity in self.aircraft_entities:
-            state = self.scenario_manager.aircraft_states[entity.id]
-            entity.teleport(state["pos"])
-            entity.set_angle(state.get("angle", 0.0))
+            ac_id = entity.id
+            # Lay initial state tu aircraft_list trong scenario_data
+            for ac_info in self.scenario_manager.scenario_data.get("aircraft_list", []):
+                if ac_info["id"] == ac_id:
+                    init_pos = ac_info.get("initial_pos", {"x": 0, "y": 0})
+                    entity.teleport(init_pos)
+                    # Goc quay lay tu states cua manager (da auto-calc)
+                    state = self.scenario_manager.aircraft_states.get(ac_id, {})
+                    entity.set_angle(state.get("angle", 0.0))
+        
         self.ui_manager.clear_log()
-        self._apply_step(step, start_movement=False)
-        self.ui_manager.set_status("Scenario Reset")
+        self.ui_manager.set_status("Scenario Reset. Sẵn sàng bắt đầu.")
 
     def handle_scenario_change(self, filename: str):
         """Thay doi kich ban theo ten file."""

@@ -56,7 +56,7 @@ class ScenarioManager:
                 self._step_index_map[step_id] = idx
 
         # Reset state
-        self.current_step_index = 0
+        self.current_step_index = -1
         self.is_paused = False
         self.aircraft_states = {}
 
@@ -127,7 +127,7 @@ class ScenarioManager:
 
     def reset(self):
         """Dat lai kich ban ve buoc dau tien."""
-        self.current_step_index = 0
+        self.current_step_index = -1
         self.is_paused = False
         for ac in self.scenario_data.get("aircraft_list", []):
             ac_id = ac["id"]
