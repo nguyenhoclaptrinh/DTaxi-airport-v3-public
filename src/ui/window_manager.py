@@ -67,9 +67,11 @@ class WindowManager:
         
         # Xác định tag màu dựa trên sender
         tag_name = "system"
-        if sender == "ATC" or sender == "KSV":
+        if sender in ["ATC", "KSV", "ATC/Ground"]:
             tag_name = "atc"
-        elif sender != "?" and sender != "": # Mặc định là Pilot nếu có tên định danh
+        elif sender == "SYSTEM":
+            tag_name = "system"
+        elif sender and sender != "?": # Mặc định là Pilot
             tag_name = "pilot"
 
         header = f"[{sender}]"

@@ -113,6 +113,10 @@ class DTaxiApp:
                 for entity in self.aircraft_entities:
                     if entity.id == ac_id:
                         entity.set_angle(angle)
+                
+                if add_to_log:
+                    self.ui_manager.add_log("SYSTEM", f"{ac_id} rotated to {angle}°")
+                
                 self.ui_manager.set_status(
                     f"[{step_id}] {ac_id} ROTATE {angle}deg")
 
@@ -120,6 +124,10 @@ class DTaxiApp:
                 path_name = step.get("path_name", "")
                 speed = step.get("speed", 5)
                 path_coords = self.scenario_manager.resolve_path(path_name)
+                
+                if add_to_log:
+                    self.ui_manager.add_log("SYSTEM", f"{ac_id} moving via '{path_name}' (Speed: {speed})")
+
                 if start_movement and path_coords:
                     for entity in self.aircraft_entities:
                         if entity.id == ac_id:
@@ -148,9 +156,9 @@ class DTaxiApp:
 
     def handle_prev(self):
         """Quay lai step truoc."""
-        # Neu step hien tai la MESSAGE, xoa khoi log truoc khi lui
+        # Neu step hien tai la MESSAGE hoac ACTION, xoa khoi log truoc khi lui
         current = self.scenario_manager.get_current_step()
-        if current and current.get("type") == "MESSAGE":
+        if current and current.get("type") in ["MESSAGE", "ACTION"]:
             self.ui_manager.remove_last_log()
 
         step = self.scenario_manager.prev_step()
