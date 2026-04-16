@@ -86,6 +86,13 @@ class WindowManager:
         
         self.log_box.configure(state="disabled")
 
+    def set_stop_state(self, paused: bool):
+        """Cap nhat trang thai nut Stop/Resume."""
+        if paused:
+            self.btn_stop.configure(text="RESUME", fg_color="#2980B9", hover_color="#2471A3")
+        else:
+            self.btn_stop.configure(text="STOP", fg_color="#C0392B", hover_color="#922B21")
+
     def set_status(self, text):
         self.status_label.configure(text=text)
 

@@ -31,6 +31,10 @@ class DTaxiApp:
     # ------------------------------------------------------------------
     # Khoi tao
     # ------------------------------------------------------------------
+    def set_stop_state(self, paused: bool):
+        """Cap nhat trang thai nut Stop/Resume."""
+        self.ui_manager.set_stop_state(paused)
+
     def setup(self):
         """Khoi phoi du lieu ban dau."""
         try:
@@ -191,11 +195,15 @@ class DTaxiApp:
             self.ui_manager.set_status("Sẵn sàng bắt đầu kịch bản.")
 
     def handle_stop(self):
-        """Tam dung tai step hien tai."""
-        self.scenario_manager.stop()
-        info = self.scenario_manager.get_scenario_info()
-        self.ui_manager.set_status(
-            f"PAUSED at step {info.get('current_step')}/{info.get('total_steps')}")
+        """Tam dung hoac tiep tuc mo phong (Toggle)."""
+        if self.scenario_manager.is_paused:
+            self.scenario_manager.resume()
+            self.ui_manager.set_status("Simulation Resumed")
+        else:
+            self.scenario_manager.stop()
+            self.ui_manager.set_status("Simulation Paused")
+            
+        self.ui_manager.set_stop_state(self.scenario_manager.is_paused)
 
     def handle_reset(self):
         """Dat lai kich ban."""
@@ -248,9 +256,10 @@ class DTaxiApp:
 
             pygame.event.pump()
 
-            # Cap nhat logic
-            for entity in self.aircraft_entities:
-                entity.update(delta_time)
+            # Cap nhat logic may bay (Chi khi khong bi Pause)
+            if not self.scenario_manager.is_paused:
+                for entity in self.aircraft_entities:
+                    entity.update(delta_time)
                 self.scenario_manager.update_aircraft_pos(
                     entity.id, {"x": entity.x, "y": entity.y})
 
