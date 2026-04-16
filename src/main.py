@@ -146,15 +146,19 @@ class DTaxiApp:
     # Callbacks tu UI
     # ------------------------------------------------------------------
     def handle_next(self):
-        """Chuyen sang step tiep theo."""
-        # Hoan thanh chuyen dong hien tai neu co
+        """Chuyen sang step tiep theo hoac hoan thanh hanh dong dang chay."""
         current = self.scenario_manager.get_current_step()
+        
+        # 1. Kiem tra neu co hanh dong dang chay thi chi hoan thanh no (Khong chuyen step)
         if current and current.get("type") == "ACTION":
             ac_id = current.get("aircraft")
             for entity in self.aircraft_entities:
-                if entity.id == ac_id:
+                if entity.id == ac_id and entity.is_moving:
                     entity.complete_path()
+                    self.ui_manager.set_status(f"Hành động hoàn tất: {ac_id}")
+                    return # Dung lai o day, khong chuyen sang step tiep theo
 
+        # 2. Neu khong co hanh dong chay, thuc hien step tiep theo nhu binh thuong
         step = self.scenario_manager.next_step()
         self._apply_step(step, start_movement=True)
 
