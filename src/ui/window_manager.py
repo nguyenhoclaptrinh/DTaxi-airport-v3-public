@@ -4,7 +4,7 @@ class WindowManager:
     """
     Quản lý giao diện người dùng (Logs, Controls) bằng CustomTkinter.
     """
-    def __init__(self, on_next, on_prev, on_reset, on_scenario_change):
+    def __init__(self, on_next, on_prev, on_reset, on_stop, on_scenario_change):
         self.root = ctk.CTk()
         self.root.title("DTaxi - AeroMACS Controller")
         self.root.geometry("400x750")
@@ -13,6 +13,7 @@ class WindowManager:
         self.on_next = on_next
         self.on_prev = on_prev
         self.on_reset = on_reset
+        self.on_stop = on_stop
         self.on_scenario_change = on_scenario_change
         
         self._setup_ui()
@@ -40,6 +41,9 @@ class WindowManager:
 
         self.btn_prev = ctk.CTkButton(self.control_frame, text="PREV", width=80, command=self.on_prev)
         self.btn_prev.pack(side="left", padx=10, expand=True)
+
+        self.btn_stop = ctk.CTkButton(self.control_frame, text="STOP", width=80, fg_color="#C0392B", hover_color="#922B21", command=self.on_stop)
+        self.btn_stop.pack(side="left", padx=10, expand=True)
 
         self.btn_next = ctk.CTkButton(self.control_frame, text="NEXT", width=120, fg_color="green", hover_color="darkgreen", command=self.on_next)
         self.btn_next.pack(side="left", padx=10, expand=True)

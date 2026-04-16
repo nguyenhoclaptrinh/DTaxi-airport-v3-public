@@ -61,7 +61,7 @@ class MapRenderer:
             pygame.draw.polygon(self.aircraft_icon, (255, 200, 0), [
                                 (15, 0), (30, 30), (15, 22), (0, 30)])
 
-    def draw(self, aircraft_entities, active_path=None):
+    def draw(self, aircraft_entities, active_path=None, current_time_str="00:00:00"):
         """Ve toan bo cac thanh phan len man hinh."""
         if not self.screen:
             return
@@ -87,5 +87,17 @@ class MapRenderer:
 
             label = self.label_font.render(ac.callsign, True, (0, 255, 0))
             self.screen.blit(label, (int(ac.x) + 20, int(ac.y) - 10))
+
+        # Ve dong ho (Time clock)
+        if current_time_str:
+            time_font = pygame.font.SysFont("Consolas", 24, bold=True)
+            time_surface = time_font.render(f"SIM TIME: {current_time_str} UTC+7", True, (0, 255, 255))
+            rect = time_surface.get_rect(topright=(self.width - 20, 20))
+            bg_rect = rect.copy()
+            bg_rect.inflate_ip(20, 10)
+            # Ve hop den vien cyan
+            pygame.draw.rect(self.screen, (20, 20, 20), bg_rect)
+            pygame.draw.rect(self.screen, (0, 255, 255), bg_rect, 2)
+            self.screen.blit(time_surface, rect)
 
         pygame.display.update()

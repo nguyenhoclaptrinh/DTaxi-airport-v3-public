@@ -1,0 +1,65 @@
+{
+    "scenario_id": "ARR-01",
+    "scenario_name": "Standard Arrival - Bamboo Airways",
+    "airport_id": "VVTS",
+    "aircraft_list": [
+        {
+            "id": "BAV1",
+            "callsign": "BAMBOO 456",
+            "type": "B787",
+            "initial_pos": { "x": 600, "y": 100 }
+        }
+    ],
+    "steps": [
+        {
+            "id": 1,
+            "timestamp": "14:00:00",
+            "type": "MESSAGE",
+            "sender": "ATC",
+            "target": "BAV1",
+            "text": "BAMBOO 456, CLEARED TO LAND RUNWAY 25L."
+        },
+        {
+            "id": 2,
+            "timestamp": "14:02:15",
+            "type": "ACTION",
+            "aircraft": "BAV1",
+            "action": "MOVE_ALONG_PATH",
+            "path_name": "Landing_RWY25L",
+            "speed": 10
+        },
+        {
+            "id": 3,
+            "timestamp": "14:03:30",
+            "type": "MESSAGE",
+            "sender": "BAV1",
+            "target": "ATC",
+            "text": "RUNWAY VACATED VIA TAXIWAY ECHO, BAMBOO 456."
+        },
+        {
+            "id": 4,
+            "timestamp": "14:03:40",
+            "type": "MESSAGE",
+            "sender": "ATC",
+            "target": "BAV1",
+            "text": "BAMBOO 456, TAXI TO STAND 15 VIA ECHO, BRAVO."
+        },
+        {
+            "id": 5,
+            "timestamp": "14:03:50",
+            "type": "ACTION",
+            "aircraft": "BAV1",
+            "action": "MOVE_ALONG_PATH",
+            "path_name": "Taxi_to_Stand_15",
+            "speed": 4
+        },
+        {
+            "id": 6,
+            "timestamp": "14:06:00",
+            "type": "MESSAGE",
+            "sender": "BAV1",
+            "target": "ATC",
+            "text": "STAND 15, ENGINE SHUTDOWN, BAMBOO 456."
+        }
+    ]
+}

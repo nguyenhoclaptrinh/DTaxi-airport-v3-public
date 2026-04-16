@@ -154,6 +154,7 @@ class DTaxiApp:
         for entity in self.aircraft_entities:
             new_pos = self.scenario_manager.aircraft_states[entity.id]["pos"]
             entity.teleport(new_pos)
+        self.ui_manager.clear_log()
         self._apply_step(step, start_movement=False)
         self.ui_manager.set_status("Scenario Reset")
 
@@ -200,14 +201,18 @@ class DTaxiApp:
             # Ve ban do
             current_step = self.scenario_manager.get_current_step()
             active_path = None
-            if current_step and current_step.get("action") == "MOVE_ALONG_PATH":
-                active_path = self.scenario_manager.resolve_path(
-                    current_step.get("path_name", "")
-                )
+            current_time_str = "00:00:00"
+            if current_step:
+                current_time_str = current_step.get("timestamp", "--:--:--")
+                if current_step.get("action") == "MOVE_ALONG_PATH":
+                    active_path = self.scenario_manager.resolve_path(
+                        current_step.get("path_name", "")
+                    )
 
             self.map_renderer.draw(
                 self.aircraft_entities,
                 active_path=active_path,
+                current_time_str=current_time_str
             )
 
         except Exception as e:

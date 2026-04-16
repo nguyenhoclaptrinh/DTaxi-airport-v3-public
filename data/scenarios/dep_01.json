@@ -7,12 +7,13 @@
             "id": "PC01",
             "callsign": "VIETJET 123",
             "type": "A321",
-            "initial_pos": { "x": 0, "y": 0 }
+            "initial_pos": { "x": 400, "y": 300 }
         }
     ],
     "steps": [
         {
             "id": 1,
+            "timestamp": "09:00:00",
             "type": "MESSAGE",
             "sender": "PC01",
             "target": "ATC",
@@ -20,6 +21,7 @@
         },
         {
             "id": 2,
+            "timestamp": "09:00:15",
             "type": "MESSAGE",
             "sender": "ATC",
             "target": "PC01",
@@ -27,6 +29,7 @@
         },
         {
             "id": 3,
+            "timestamp": "09:00:25",
             "type": "MESSAGE",
             "sender": "PC01",
             "target": "ATC",
@@ -34,6 +37,7 @@
         },
         {
             "id": 4,
+            "timestamp": "09:01:00",
             "type": "ACTION",
             "aircraft": "PC01",
             "action": "ROTATE",
@@ -41,6 +45,7 @@
         },
         {
             "id": 5,
+            "timestamp": "09:01:10",
             "type": "ACTION",
             "aircraft": "PC01",
             "action": "MOVE_ALONG_PATH",
@@ -49,6 +54,7 @@
         },
         {
             "id": 6,
+            "timestamp": "09:03:00",
             "type": "MESSAGE",
             "sender": "PC01",
             "target": "ATC",
@@ -56,6 +62,7 @@
         },
         {
             "id": 7,
+            "timestamp": "09:03:10",
             "type": "MESSAGE",
             "sender": "ATC",
             "target": "PC01",
@@ -63,6 +70,7 @@
         },
         {
             "id": 8,
+            "timestamp": "09:03:20",
             "type": "MESSAGE",
             "sender": "PC01",
             "target": "ATC",
@@ -70,6 +78,7 @@
         },
         {
             "id": 9,
+            "timestamp": "09:03:30",
             "type": "ACTION",
             "aircraft": "PC01",
             "action": "MOVE_ALONG_PATH",
