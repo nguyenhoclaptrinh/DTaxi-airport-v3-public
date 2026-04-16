@@ -284,23 +284,33 @@ class DTaxiApp:
                 self.auto_advance_timer -= delta_time
                 if self.auto_advance_timer <= 0:
                     can_advance = True
+            
+            if can_advance:
+                if self.scenario_manager.is_finished():
+                    # Kich ban da ket thuc hoan toan ở bước cuoi
+                    # Đẩy index len để current tro thanh None cho vong lap sau
+                    steps = self.scenario_manager.scenario_data.get("steps", [])
+                    self.scenario_manager.current_step_index = len(steps)
+                    self.auto_advance_timer = 2.0 # Cho 2 giây rồi mới RESET
+                else:
+                    # Chua het -> Sang buoc tiep theo
+                    self.auto_advance_timer = self.AUTO_MESSAGE_DELAY
+                    self.handle_next()
         else:
-            # Kich ban da ket thuc hoac chua bat dau
+            # Kich ban da ket thuc (None) hoac chua bat dau (-1)
             if self.scenario_manager.current_step_index >= 0:
-                # Da ket thuc -> Loop sau 2s
+                # Trang thai sau buoc cuoi cung -> Cho Reset
                 self.auto_advance_timer -= delta_time
                 if self.auto_advance_timer <= 0:
                     self.handle_reset()
             else:
-                # Chua bat dau (Index -1) -> Cho 1s roi start
+                # Trang thai am (-1) -> Vua Reset xong, cho 1s roi start
+                if self.auto_advance_timer > 1.0: 
+                    self.auto_advance_timer = 1.0 # Ep thoi gian cho start nhanh hon cho mượt
+                
                 self.auto_advance_timer -= delta_time
                 if self.auto_advance_timer <= 0:
                     self.handle_next()
-
-        if can_advance:
-            # Reset timer cho buoc tiep theo truoc khi goi next
-            self.auto_advance_timer = self.AUTO_MESSAGE_DELAY
-            self.handle_next()
 
     def update_loop(self):
         """Vong lap cap nhat an toan."""

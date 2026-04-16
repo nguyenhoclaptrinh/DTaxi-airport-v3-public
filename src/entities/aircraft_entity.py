@@ -39,6 +39,22 @@ class AircraftEntity:
         """Lap tuc hoan thanh hanh trinh hien tai (nhay den waypoint cuoi cung)."""
         if self.target_path:
             last_target = self.target_path[-1]
+            
+            # Tinh toan goc quay truoc khi teleport
+            # Neu co nhieu diem, lay huong tu diem sat cuoi den diem cuoi
+            if len(self.target_path) >= 2:
+                p1 = self.target_path[-2]
+                p2 = self.target_path[-1]
+                dx = p2['x'] - p1['x']
+                dy = p2['y'] - p1['y']
+            else:
+                # Chi con 1 diem, lay huong tu vi tri hien tai den diem do
+                dx = last_target['x'] - self.x
+                dy = last_target['y'] - self.y
+            
+            if dx != 0 or dy != 0:
+                self.angle = math.degrees(math.atan2(dy, dx))
+                
             self.teleport(last_target)
 
     def set_angle(self, angle: float):
