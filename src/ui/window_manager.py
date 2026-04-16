@@ -99,6 +99,24 @@ class WindowManager:
         else:
             self.scenario_selector.set(files[0])
 
+    def remove_last_log(self):
+        """Xóa block log cuối cùng khi người dùng nhấn PREV."""
+        self.log_box.configure(state="normal")
+        
+        # Tìm dấu xuống dòng kép (ngăn cách các message) từ cuối ngược lên
+        # end-1c: trước ký tự newline cuối cùng
+        # end-3c: bỏ qua cụm \n\n ở cuối message hiện tại để tìm cụm \n\n của message trước đó
+        idx = self.log_box._textbox.search("\n\n", "end-3c", "1.0", backwards=True)
+        
+        if idx:
+            # Nếu tìm thấy, xóa từ sau dấu \n\n đó đến hết
+            self.log_box.delete(f"{idx} + 2 chars", "end")
+        else:
+            # Nếu không tìm thấy (chỉ có 1 log), xóa sạch
+            self.log_box.delete("1.0", "end")
+            
+        self.log_box.configure(state="disabled")
+
     def clear_log(self):
         self.log_box.configure(state="normal")
         self.log_box.delete("1.0", "end")

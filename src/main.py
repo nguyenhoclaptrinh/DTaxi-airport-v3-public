@@ -86,7 +86,7 @@ class DTaxiApp:
     # ------------------------------------------------------------------
     # Xu ly Step Atomic
     # ------------------------------------------------------------------
-    def _apply_step(self, step: dict | None, start_movement: bool = True):
+    def _apply_step(self, step: dict | None, start_movement: bool = True, add_to_log: bool = True):
         """Ap dung noi dung cua mot step nguyen tu."""
         if not step:
             self.ui_manager.set_status("Kich ban da ket thuc.")
@@ -99,7 +99,8 @@ class DTaxiApp:
             sender = step.get("sender", "?")
             target = step.get("target", "?")
             text = step.get("text", "")
-            self.ui_manager.add_log(sender, text, target)
+            if add_to_log:
+                self.ui_manager.add_log(sender, text, target)
             label = f"[{step_id}] {sender} -> {target}"
             self.ui_manager.set_status(label)
 
@@ -147,6 +148,11 @@ class DTaxiApp:
 
     def handle_prev(self):
         """Quay lai step truoc."""
+        # Neu step hien tai la MESSAGE, xoa khoi log truoc khi lui
+        current = self.scenario_manager.get_current_step()
+        if current and current.get("type") == "MESSAGE":
+            self.ui_manager.remove_last_log()
+
         step = self.scenario_manager.prev_step()
         if step:
             # Dua may bay ve dau path neu la MOVE action
@@ -158,7 +164,7 @@ class DTaxiApp:
                     for entity in self.aircraft_entities:
                         if entity.id == ac_id:
                             entity.teleport(path_coords[0])
-            self._apply_step(step, start_movement=False)
+            self._apply_step(step, start_movement=False, add_to_log=False)
 
     def handle_stop(self):
         """Tam dung tai step hien tai."""
