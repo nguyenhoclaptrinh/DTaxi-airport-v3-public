@@ -4,7 +4,15 @@ class WindowManager:
     """
     Quản lý giao diện người dùng (Logs, Controls) bằng CustomTkinter.
     """
-    def __init__(self, on_next, on_prev, on_reset, on_stop, on_scenario_change):
+    def __init__(
+            self, 
+            on_next, 
+            on_prev, 
+            on_reset, 
+            on_stop, 
+            on_scenario_change, 
+            on_auto_play=None
+    ):
         self.root = ctk.CTk()
         self.root.title("DTaxi - AeroMACS Controller")
         self.root.geometry("400x744")
@@ -15,6 +23,7 @@ class WindowManager:
         self.on_reset = on_reset
         self.on_stop = on_stop
         self.on_scenario_change = on_scenario_change
+        self.on_auto_play = on_auto_play
         
         self._setup_ui()
 
@@ -29,6 +38,16 @@ class WindowManager:
             command=self.on_scenario_change
         )
         self.scenario_selector.pack(pady=10)
+        
+        # Checkbox Auto Play
+        self.auto_play_var = ctk.BooleanVar(value=False)
+        self.check_auto_play = ctk.CTkCheckBox(
+            self.root, 
+            text="AUTO PLAY / LOOP MODE", 
+            variable=self.auto_play_var,
+            command=self._handle_auto_play_toggle
+        )
+        self.check_auto_play.pack(pady=5)
 
         # 2. Khung Log (Scrollable)
         self.log_box = ctk.CTkTextbox(self.root, width=360, height=400, font=("Consolas", 12))
@@ -130,6 +149,11 @@ class WindowManager:
         self.log_box.configure(state="normal")
         self.log_box.delete("1.0", "end")
         self.log_box.configure(state="disabled")
+
+    def _handle_auto_play_toggle(self):
+        """Callback khi toggle checkbox AUTO PLAY."""
+        if self.on_auto_play:
+            self.on_auto_play(self.auto_play_var.get())
 
     def run_step(self):
         """Cập nhật vòng lặp Tkinter."""

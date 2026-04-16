@@ -22,11 +22,17 @@ class DTaxiApp:
             on_reset=self.handle_reset,
             on_stop=self.handle_stop,
             on_scenario_change=self.handle_scenario_change,
+            on_auto_play=self.handle_auto_play_toggle,
         )
 
         self.aircraft_entities: list[AircraftEntity] = []
         self.clock = pygame.time.Clock()
         self.running = True
+        
+        # Auto Play state
+        self.is_auto_play = False
+        self.auto_advance_timer = 0.0
+        self.AUTO_MESSAGE_DELAY = 3.0 # Giây chờ cho mỗi tin nhắn
 
     # ------------------------------------------------------------------
     # Khoi tao
@@ -111,6 +117,9 @@ class DTaxiApp:
                 self.ui_manager.add_log(sender, text, target)
             label = f"[{step_id}] {sender} -> {target}"
             self.ui_manager.set_status(label)
+ 
+            # Reset timer cho che do Auto
+            self.auto_advance_timer = self.AUTO_MESSAGE_DELAY
 
         elif step_type == "ACTION":
             action = step.get("action")
@@ -226,6 +235,15 @@ class DTaxiApp:
         """Thay doi kich ban theo ten file."""
         self.load_scenario(filename)
 
+    def handle_auto_play_toggle(self, enabled: bool):
+        """Bat/tat che do tu dong chuyen buoc."""
+        self.is_auto_play = enabled
+        self.auto_advance_timer = self.AUTO_MESSAGE_DELAY
+        if enabled:
+            self.ui_manager.set_status("AUTO PLAY Mode: Enabled")
+        else:
+            self.ui_manager.set_status("AUTO PLAY Mode: Disabled")
+
     # ------------------------------------------------------------------
     # Vong lap chinh
     # ------------------------------------------------------------------
@@ -236,6 +254,47 @@ class DTaxiApp:
         self.ui_manager.root.mainloop()
         self.running = False
         pygame.quit()
+
+    def _handle_auto_logic(self, delta_time: float):
+        """Xu ly tu dong chuyen bước va loop."""
+        current = self.scenario_manager.get_current_step()
+        
+        can_advance = False
+        
+        if current:
+            if current.get("type") == "ACTION":
+                # Cho den khi may bay dung di chuyen
+                ac_id = current.get("aircraft")
+                is_moving = False
+                for entity in self.aircraft_entities:
+                    if entity.id == ac_id and entity.is_moving:
+                        is_moving = True
+                        break
+                if not is_moving:
+                    can_advance = True
+            
+            elif current.get("type") == "MESSAGE":
+                # Dem nguoc thoi gian cho tin nhan
+                self.auto_advance_timer -= delta_time
+                if self.auto_advance_timer <= 0:
+                    can_advance = True
+        else:
+            # Kich ban da ket thuc hoac chua bat dau
+            if self.scenario_manager.current_step_index >= 0:
+                # Da ket thuc -> Loop sau 2s
+                self.auto_advance_timer -= delta_time
+                if self.auto_advance_timer <= 0:
+                    self.handle_reset()
+            else:
+                # Chua bat dau (Index -1) -> Cho 1s roi start
+                self.auto_advance_timer -= delta_time
+                if self.auto_advance_timer <= 0:
+                    self.handle_next()
+
+        if can_advance:
+            # Reset timer cho buoc tiep theo truoc khi goi next
+            self.auto_advance_timer = self.AUTO_MESSAGE_DELAY
+            self.handle_next()
 
     def update_loop(self):
         """Vong lap cap nhat an toan."""
@@ -262,6 +321,10 @@ class DTaxiApp:
                     entity.update(delta_time)
                 self.scenario_manager.update_aircraft_pos(
                     entity.id, {"x": entity.x, "y": entity.y})
+
+            # Logic Auto Advance
+            if self.is_auto_play and not self.scenario_manager.is_paused:
+                self._handle_auto_logic(delta_time)
 
             # Ve ban do
             current_step = self.scenario_manager.get_current_step()
