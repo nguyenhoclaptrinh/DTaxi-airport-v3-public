@@ -1,45 +1,97 @@
 {
-  "name": "New Scenario",
+  "name": "Kịch bản Cất cánh chuẩn VN123",
   "aircraft_list": [
     {
-      "id": "NEW",
-      "callsign": "NEW CALLSIGN",
+      "id": "HVN123",
+      "callsign": "VIETNAM 123",
       "type": "A321",
       "initial_pos": {
-        "x": 983,
-        "y": 339
+        "x": 979,
+        "y": 335
       },
-      "initial_angle": 163
+      "initial_angle": 160
     }
   ],
   "steps": [
     {
       "id": 1,
-      "type": "ACTION",
-      "action": "MOVE_ALONG_PATH",
-      "aircraft": "NEW",
-      "path_name": "beforeE4"
-    },
-    {
-      "id": 2,
-      "type": "ACTION",
-      "action": "MOVE_ALONG_PATH",
-      "aircraft": "NEW",
-      "path_name": "E4"
-    },
-    {
-      "id": 3,
-      "type": "ACTION",
-      "action": "MOVE_ALONG_PATH",
-      "aircraft": "NEW",
-      "path_name": "25L"
-    },
-    {
-      "id": 4,
       "type": "MESSAGE",
       "sender": "Pilot",
       "target": "ATC",
-      "text": "Ready for taxi"
+      "text": "Tan Son Nhat Ground, Vietnam 123, request taxi for takeoff runway 25L."
+    },
+    {
+      "id": 2,
+      "type": "MESSAGE",
+      "sender": "ATC",
+      "target": "Pilot",
+      "text": "Vietnam 123, taxi to holding point runway 25L via E4."
+    },
+    {
+      "id": 3,
+      "type": "MESSAGE",
+      "sender": "Pilot",
+      "target": "ATC",
+      "text": "Taxi to holding point runway 25L via E4, Vietnam 123."
+    },
+    {
+      "id": 4,
+      "type": "ACTION",
+      "action": "MOVE_ALONG_PATH",
+      "aircraft": "HVN123",
+      "path_name": "beforeE4",
+      "speed": 8
+    },
+    {
+      "id": 5,
+      "type": "ACTION",
+      "action": "MOVE_ALONG_PATH",
+      "aircraft": "HVN123",
+      "path_name": "E4",
+      "speed": 6
+    },
+    {
+      "id": 6,
+      "type": "MESSAGE",
+      "sender": "Pilot",
+      "target": "ATC",
+      "text": "Vietnam 123, reaching holding point 25L."
+    },
+    {
+      "id": 7,
+      "type": "MESSAGE",
+      "sender": "ATC",
+      "target": "Pilot",
+      "text": "Vietnam 123, line up and wait runway 25L."
+    },
+    {
+      "id": 8,
+      "type": "MESSAGE",
+      "sender": "Pilot",
+      "target": "ATC",
+      "text": "Line up and wait runway 25L, Vietnam 123."
+    },
+    {
+      "id": 9,
+      "type": "MESSAGE",
+      "sender": "ATC",
+      "target": "Pilot",
+      "text": "Vietnam 123, wind 240 degrees 5 knots, runway 25L, cleared for takeoff."
+    },
+    {
+      "id": 10,
+      "type": "MESSAGE",
+      "sender": "Pilot",
+      "target": "ATC",
+      "text": "Cleared for takeoff runway 25L, Vietnam 123."
+    },
+    {
+      "id": 11,
+      "type": "ACTION",
+      "action": "MOVE_ALONG_PATH",
+      "aircraft": "HVN123",
+      "path_name": "25L",
+      "speed": 40
     }
   ]
 }
