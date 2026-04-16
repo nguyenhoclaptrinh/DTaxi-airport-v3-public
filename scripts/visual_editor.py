@@ -156,6 +156,22 @@ def draw_ui(screen, font, small_font, current_points, saved_paths, show_list, bg
         txt = small_font.render(line, True, col)
         screen.blit(txt, (12, 10 + i * 20))
 
+    # --- Danh sach paths da luu (Ben phai) ---
+    if show_list and saved_paths:
+        names = list(saved_paths.keys())
+        list_w = 260
+        list_h = len(names) * 22 + 40
+        list_surf = pygame.Surface((list_w, list_h), pygame.SRCALPHA)
+        list_surf.fill((20, 20, 20, 220))
+        # Dat o phia ben phai, duoi sidebar neu co
+        screen.blit(list_surf, (SCREEN_W - list_w - 5, 10))
+        header = small_font.render("--- DANH SACH PATH ---", True, (255, 200, 50))
+        screen.blit(header, (SCREEN_W - list_w + 10, 20))
+        for i, name in enumerate(names):
+            pts = saved_paths[name]
+            txt = small_font.render(f"{i+1}. {name} ({len(pts)} pts)", True, (0, 255, 150))
+            screen.blit(txt, (SCREEN_W - list_w + 10, 50 + i * 22))
+
 
 def draw_scenario_ui(screen, font, small_font, scenario_data, active_ac_idx, scenario_name, show_list, saved_paths):
     """Ve bang dieu khien kich ban."""
@@ -206,21 +222,6 @@ def draw_scenario_ui(screen, font, small_font, scenario_data, active_ac_idx, sce
         screen.blit(txt, (SCREEN_W - side_w, y))
         y += 18
 
-    # --- Danh sach paths da luu ---
-    if show_list and saved_paths:
-        names = list(saved_paths.keys())
-        list_w = 320
-        list_h = len(names) * 22 + 24
-        list_surf = pygame.Surface((list_w, list_h), pygame.SRCALPHA)
-        list_surf.fill((20, 20, 20, 210))
-        screen.blit(list_surf, (SCREEN_W - list_w - 5, 5))
-        header = small_font.render("Paths da luu:", True, (255, 200, 50))
-        screen.blit(header, (SCREEN_W - list_w, 10))
-        for i, name in enumerate(names):
-            pts = saved_paths[name]
-            txt = small_font.render(
-                f"  {name}  ({len(pts)} diem)", True, (0, 220, 120))
-            screen.blit(txt, (SCREEN_W - list_w, 32 + i * 22))
 
 
 def draw_scene(screen, bg, bg_rect, current_points, saved_paths):
@@ -507,8 +508,8 @@ def run_editor():
                         # Check if clicking on an aircraft to select it
                         clicked_ac = -1
                         for i, ac in enumerate(scenario_data.get("aircraft_list", [])):
-                            px = bg_x + (ac["initial_pos"]["x"] / 800) * bg_w
-                            py = bg_y + (ac["initial_pos"]["y"] / 600) * bg_h
+                            px = bg_x + (ac["initial_pos"]["x"] / SCREEN_W) * bg_w
+                            py = bg_y + (ac["initial_pos"]["y"] / SCREEN_H) * bg_h
                             if (mx - px)**2 + (my - py)**2 < 400: # 20px radius
                                 clicked_ac = i
                                 break
@@ -540,14 +541,14 @@ def run_editor():
                     
                     if pygame.key.get_mods() & pygame.KMOD_CTRL:
                         # ROTATE mode (hold CTRL)
-                        px = bg_x + (ac["initial_pos"]["x"] / 800) * bg_w
-                        py = bg_y + (ac["initial_pos"]["y"] / 600) * bg_h
+                        px = bg_x + (ac["initial_pos"]["x"] / SCREEN_W) * bg_w
+                        py = bg_y + (ac["initial_pos"]["y"] / SCREEN_H) * bg_h
                         ac["initial_angle"] = int(math.degrees(math.atan2(my - py, mx - px)))
                     else:
                         # MOVE mode (default drag)
                         rel_x = (mx - bg_x) / bg_w
                         rel_y = (my - bg_y) / bg_h
-                        ac["initial_pos"] = {"x": round(rel_x * 800), "y": round(rel_y * 600)}
+                        ac["initial_pos"] = {"x": round(rel_x * SCREEN_W), "y": round(rel_y * SCREEN_H)}
 
             elif event.type == pygame.KEYDOWN:
                 # Prioritize deactivating InputBox with ESC
