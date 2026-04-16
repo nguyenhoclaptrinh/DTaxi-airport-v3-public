@@ -103,11 +103,12 @@ class DTaxiApp:
         """Ap dung noi dung cua mot step nguyen tu."""
         if not step:
             if self.scenario_manager.current_step_index == -1:
-                self.ui_manager.set_status("Sẵn sàng bắt đầu kịch bản. Nhấn NEXT.")
-            else:
-                self.ui_manager.set_status("Kịch bản đã kết thúc.")
+                self.ui_manager.set_status("Scenario Ready.")
             return
 
+        # LUON reset timer khi ap dung buoc moi
+        self.auto_advance_timer = self.AUTO_MESSAGE_DELAY
+        
         step_type = step.get("type")
         step_id = step.get("id", "?")
 
@@ -119,9 +120,6 @@ class DTaxiApp:
                 self.ui_manager.add_log(sender, text, target)
             label = f"[{step_id}] {sender} -> {target}"
             self.ui_manager.set_status(label)
- 
-            # Reset timer cho che do Auto
-            self.auto_advance_timer = self.AUTO_MESSAGE_DELAY
 
         elif step_type == "ACTION":
             action = step.get("action")
@@ -232,6 +230,8 @@ class DTaxiApp:
         
         self.ui_manager.clear_log()
         self.ui_manager.set_status("Scenario Reset. Sẵn sàng bắt đầu.")
+        # Cho 2 giay de nguoi dung kip nhin thay trang thai reset truoc khi start lai
+        self.auto_advance_timer = 2.0 
 
     def handle_scenario_change(self, filename: str):
         """Thay doi kich ban theo ten file."""
@@ -258,17 +258,18 @@ class DTaxiApp:
         self._last_time = time.perf_counter()
         self.update_loop()
         self.ui_manager.root.mainloop()
-        self.running = False
-        pygame.quit()
 
     def _handle_auto_logic(self, delta_time: float):
         """Xu ly tu dong chuyen bước va loop."""
         current = self.scenario_manager.get_current_step()
-        
-        can_advance = False
+        total_steps = len(self.scenario_manager.scenario_data.get("steps", []))
         
         if current:
-            if current.get("type") == "ACTION":
+            # 1. DANG TRONG KICH BAN
+            can_advance = False
+            step_type = current.get("type")
+            
+            if step_type == "ACTION":
                 # Cho den khi may bay dung di chuyen
                 ac_id = current.get("aircraft")
                 is_moving = False
@@ -279,7 +280,7 @@ class DTaxiApp:
                 if not is_moving:
                     can_advance = True
             
-            elif current.get("type") == "MESSAGE":
+            elif step_type == "MESSAGE":
                 # Dem nguoc thoi gian cho tin nhan
                 self.auto_advance_timer -= delta_time
                 if self.auto_advance_timer <= 0:
@@ -287,29 +288,28 @@ class DTaxiApp:
             
             if can_advance:
                 if self.scenario_manager.is_finished():
-                    # Kich ban da ket thuc hoan toan ở bước cuoi
-                    # Đẩy index len để current tro thanh None cho vong lap sau
-                    steps = self.scenario_manager.scenario_data.get("steps", [])
-                    self.scenario_manager.current_step_index = len(steps)
-                    self.auto_advance_timer = 2.0 # Cho 2 giây rồi mới RESET
+                    # Kich ban ket thuc tai buoc cuoi cung
+                    # Day index len total_steps de get_current_step() tra ve None
+                    self.scenario_manager.current_step_index = total_steps
+                    self.auto_advance_timer = 3.0 # Cho 3s truoc khi reset
+                    self.ui_manager.add_log("SYSTEM", "Scenario complete. Loop in 3s...")
                 else:
                     # Chua het -> Sang buoc tiep theo
-                    self.auto_advance_timer = self.AUTO_MESSAGE_DELAY
                     self.handle_next()
         else:
-            # Kich ban da ket thuc (None) hoac chua bat dau (-1)
-            if self.scenario_manager.current_step_index >= 0:
+            # 2. NGOAI KICH BAN (LUK MOI START HOAC CHO RESET)
+            idx = self.scenario_manager.current_step_index
+            
+            if idx >= total_steps:
                 # Trang thai sau buoc cuoi cung -> Cho Reset
                 self.auto_advance_timer -= delta_time
                 if self.auto_advance_timer <= 0:
                     self.handle_reset()
-            else:
-                # Trang thai am (-1) -> Vua Reset xong, cho 1s roi start
-                if self.auto_advance_timer > 1.0: 
-                    self.auto_advance_timer = 1.0 # Ep thoi gian cho start nhanh hon cho mượt
-                
+            elif idx == -1:
+                # Trang thai vua Reset xong -> Cho 1.5s de start lai
                 self.auto_advance_timer -= delta_time
                 if self.auto_advance_timer <= 0:
+                    self.ui_manager.add_log("SYSTEM", "Replaying scenario...")
                     self.handle_next()
 
     def update_loop(self):

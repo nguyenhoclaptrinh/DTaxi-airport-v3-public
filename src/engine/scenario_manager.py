@@ -191,7 +191,9 @@ class ScenarioManager:
     def is_finished(self) -> bool:
         """Kiem tra kich ban da ket thuc chua."""
         steps = self.scenario_data.get("steps", [])
-        return self.current_step_index >= len(steps)
+        if not steps:
+            return True
+        return self.current_step_index >= len(steps) - 1
 
     def get_scenario_info(self) -> dict:
         """Tra ve thong tin tong quat cua kich ban."""
