@@ -141,6 +141,7 @@ def draw_ui(screen, font, small_font, current_points, saved_paths, show_list, bg
         "[R] Reset kich ban",
         "[P] Gan Path cho AC",
         "[DELETE] Xoa may bay",
+        "[H] An/Hien Scenario UI",
         "[SPACE] Them diem (khi ve)",
         "[ESC] Quay lai / Thoat",
     ]
@@ -164,8 +165,8 @@ def draw_scenario_ui(screen, font, small_font, scenario_data, active_ac_idx, sce
     # Sidebar ben phai cho Timeline/Aircraft Property
     side_w = 280
     side_rect = pygame.Rect(SCREEN_W - side_w - 5, 5, side_w, SCREEN_H - 10)
-    pygame.draw.rect(screen, (20, 20, 20, 220), side_rect)
-    pygame.draw.rect(screen, (100, 100, 100), side_rect, 1)
+    pygame.draw.rect(screen, (20, 20, 20, 140), side_rect) # Tang transparency (140)
+    pygame.draw.rect(screen, (100, 100, 100, 200), side_rect, 1)
 
     y = 20
     header = font.render(f"SCENARIO: {scenario_name}", True, (255, 255, 0))
@@ -263,24 +264,37 @@ def draw_initial_marker(screen, font, pos, angle, bg_x, bg_y, bg_w, bg_h):
     # Chuyen doi sang toa do normalized
     rel_x = (pos[0] - bg_x) / bg_w
     rel_y = (pos[1] - bg_y) / bg_h
-    nx, ny = round(rel_x * 800), round(rel_y * 600)
+    nx, ny = round(rel_x * SCREEN_W), round(rel_y * SCREEN_H)
     
     info = font.render(f"INIT: pos({nx}, {ny}) angle({int(angle)})", True, (255, 255, 0))
     screen.blit(info, (pos[0] + 20, pos[1] + 10))
 
 
-def draw_scenario_entities(screen, font, aircraft_list, active_idx, bg_x, bg_y, bg_w, bg_h):
-    """Ve tat ca may bay trong kich ban."""
+def draw_scenario_entities(screen, font, scenario_data, active_idx, bg_x, bg_y, bg_w, bg_h, saved_paths):
+    """Ve tat ca may bay va duong bay cua chung trong kich ban."""
     import math
+    aircraft_list = scenario_data.get("aircraft_list", [])
+    steps = scenario_data.get("steps", [])
     for i, ac in enumerate(aircraft_list):
         pos_data = ac.get("initial_pos", {"x": 0, "y": 0})
-        # Chuyen normalized sang screen
-        sx = bg_x + (pos_data["x"] / 800) * bg_w
-        sy = bg_y + (pos_data["y"] / 600) * bg_h
         angle = ac.get("initial_angle", 0)
-        
+        # Chuyen normalized sang screen
+        sx = bg_x + (pos_data["x"] / SCREEN_W) * bg_w
+        sy = bg_y + (pos_data["y"] / SCREEN_H) * bg_h
+        ac_id = ac.get("id")
         is_active = (i == active_idx)
         color = (0, 255, 255) if is_active else (150, 150, 150)
+
+        # Neu la may bay dang chon, ve cac Path ma no se di qua
+        if is_active:
+            for step in steps:
+                if step.get("aircraft") == ac_id and step.get("type") == "ACTION" and step.get("action") == "MOVE_ALONG_PATH":
+                    pname = step.get("path_name")
+                    if pname in saved_paths:
+                        # Lay list diem da duoc chuyen sang pixel screen
+                        pts = saved_paths[pname]
+                        if len(pts) >= 2:
+                            pygame.draw.lines(screen, (200, 100, 255), False, pts, 3)
         
         # Ve ky hieu quay may bay (tam giac)
         size = 18 if is_active else 12
@@ -426,6 +440,7 @@ def run_editor():
     saved_paths = load_paths()
     current_points = []
     show_list = False
+    show_scenario_ui = True
     clock = pygame.time.Clock()
     running = True
 
@@ -587,6 +602,11 @@ def run_editor():
                         status_msg = f"{'Hien' if show_list else 'An'} danh sach Path."
                         status_timer = 1500
 
+                    elif event.key == pygame.K_h:
+                        show_scenario_ui = not show_scenario_ui
+                        status_msg = f"{'Hien' if show_scenario_ui else 'An'} Sidebar kịch bản."
+                        status_timer = 1500
+
                     elif event.key == pygame.K_LEFTBRACKET:
                         if scenario_data and scenario_data["aircraft_list"]:
                             active_ac_idx = (active_ac_idx - 1) % len(scenario_data["aircraft_list"])
@@ -635,7 +655,7 @@ def run_editor():
                         if current_mode == MODE_PATH:
                             # Save Path logic (already exists)
                             if len(current_points) >= 2:
-                                norm_pts = [{"x": round((p[0]-bg_x)/bg_w*800), "y": round((p[1]-bg_y)/bg_h*600)} for p in current_points]
+                                norm_pts = [{"x": round((p[0]-bg_x)/bg_w*SCREEN_W), "y": round((p[1]-bg_y)/bg_h*SCREEN_H)} for p in current_points]
                                 pname = prompt_path_name(screen, font, small_font)
                                 if pname:
                                     saved_paths[pname] = norm_pts
@@ -656,21 +676,24 @@ def run_editor():
                         status_timer = 1500
 
         # --- DRAWING ---
-        draw_scene(screen, bg, bg_rect, current_points, {
-            name: [(int(p["x"] / 800 * bg_w) + bg_x, int(p["y"] / 600 * bg_h) + bg_y)
+        mapped_paths = {
+            name: [(int(p["x"] / SCREEN_W * bg_w) + bg_x, int(p["y"] / SCREEN_H * bg_h) + bg_y)
                    for p in pts]
             for name, pts in saved_paths.items()
-        })
+        }
+
+        draw_scene(screen, bg, bg_rect, current_points, mapped_paths)
 
         if scenario_data:
-            draw_scenario_entities(screen, font, scenario_data["aircraft_list"], active_ac_idx, bg_x, bg_y, bg_w, bg_h)
+            draw_scenario_entities(screen, font, scenario_data, active_ac_idx, bg_x, bg_y, bg_w, bg_h, mapped_paths)
 
         if current_mode == MODE_INITIAL:
             draw_initial_marker(screen, font, init_pos, init_angle, bg_x, bg_y, bg_w, bg_h)
         elif current_mode == MODE_SCENARIO and scenario_data:
-            draw_scenario_ui(screen, font, small_font, scenario_data, active_ac_idx, scenario_name, show_list, saved_paths)
-            for box in input_boxes:
-                box.draw(screen)
+            if show_scenario_ui:
+                draw_scenario_ui(screen, font, small_font, scenario_data, active_ac_idx, scenario_name, show_list, saved_paths)
+                for box in input_boxes:
+                    box.draw(screen)
 
         draw_ui(screen, font, small_font, current_points,
                 saved_paths, show_list, bg_w, bg_h)
@@ -692,8 +715,8 @@ def run_editor():
         mx, my = pygame.mouse.get_pos()
         rel_x = (mx - bg_x) / bg_w if bg_w > 0 else 0
         rel_y = (my - bg_y) / bg_h if bg_h > 0 else 0
-        norm_x = round(rel_x * 800)
-        norm_y = round(rel_y * 600)
+        norm_x = round(rel_x * SCREEN_W)
+        norm_y = round(rel_y * SCREEN_H)
         coord_txt = small_font.render(
             f"Chuot: screen({mx},{my})  norm({norm_x},{norm_y})", True, (180, 180, 180))
         screen.blit(
