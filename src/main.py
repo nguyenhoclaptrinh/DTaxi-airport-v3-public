@@ -55,6 +55,7 @@ class DTaxiApp:
                 ac_data["callsign"],
                 ac_data["pos"]["x"],
                 ac_data["pos"]["y"],
+                initial_angle=ac_data.get("angle", 0.0)
             )
             self.aircraft_entities.append(entity)
 
@@ -152,8 +153,9 @@ class DTaxiApp:
         """Dat lai kich ban."""
         step = self.scenario_manager.reset()
         for entity in self.aircraft_entities:
-            new_pos = self.scenario_manager.aircraft_states[entity.id]["pos"]
-            entity.teleport(new_pos)
+            state = self.scenario_manager.aircraft_states[entity.id]
+            entity.teleport(state["pos"])
+            entity.set_angle(state.get("angle", 0.0))
         self.ui_manager.clear_log()
         self._apply_step(step, start_movement=False)
         self.ui_manager.set_status("Scenario Reset")

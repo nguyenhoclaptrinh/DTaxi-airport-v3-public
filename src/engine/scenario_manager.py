@@ -62,11 +62,18 @@ class ScenarioManager:
 
         # Khoi tao trang thai may bay
         for ac in self.scenario_data.get("aircraft_list", []):
+            init_pos = ac.get("initial_pos", {"x": 0, "y": 0})
+            
+            # Tu dong tinh toan goc quay ban dau neu khong co initial_angle
+            initial_angle = ac.get("initial_angle")
+            if initial_angle is None:
+                initial_angle = self._auto_calculate_initial_angle(ac["id"], init_pos)
+
             self.aircraft_states[ac["id"]] = {
                 "callsign": ac["callsign"],
                 "type": ac.get("type", "Unknown"),
-                "pos": dict(ac.get("initial_pos", {"x": 0, "y": 0})),
-                "angle": 0.0,
+                "pos": dict(init_pos),
+                "angle": float(initial_angle),
                 "speed": 0.0,
             }
 
@@ -123,10 +130,41 @@ class ScenarioManager:
         self.current_step_index = 0
         self.is_paused = False
         for ac in self.scenario_data.get("aircraft_list", []):
-            self.aircraft_states[ac["id"]]["pos"] = dict(
-                ac.get("initial_pos", {"x": 0, "y": 0}))
-            self.aircraft_states[ac["id"]]["angle"] = 0.0
+            ac_id = ac["id"]
+            init_pos = ac.get("initial_pos", {"x": 0, "y": 0})
+            
+            # Lay lai goc ban dau (da duoc tinh o load_scenario)
+            init_angle = self.aircraft_states[ac_id].get("angle", 0.0)
+            
+            self.aircraft_states[ac_id]["pos"] = dict(init_pos)
+            self.aircraft_states[ac_id]["angle"] = init_angle
         return self.get_current_step()
+
+    def _auto_calculate_initial_angle(self, aircraft_id: str, start_pos: dict) -> float:
+        """Tim step MOVE dau tien cua may bay nay de tinh huong di."""
+        steps = self.scenario_data.get("steps", [])
+        for step in steps:
+            if step.get("type") == "ACTION" and step.get("action") == "MOVE_ALONG_PATH":
+                if step.get("aircraft") == aircraft_id:
+                    path_name = step.get("path_name")
+                    path_pts = self.resolve_path(path_name)
+                    if path_pts and len(path_pts) > 0:
+                        # Tinh goc tu start_pos den diem dau tien cua path, 
+                        # hoac tu p1 den p2 neu start_pos trung p1
+                        p1 = path_pts[0]
+                        dx = p1["x"] - start_pos["x"]
+                        dy = p1["y"] - start_pos["y"]
+                        
+                        # Neu trung nhau (start_pos la p1), tinh tu p1 sang p2
+                        if abs(dx) < 1.0 and abs(dy) < 1.0 and len(path_pts) > 1:
+                            p2 = path_pts[1]
+                            dx = p2["x"] - p1["x"]
+                            dy = p2["y"] - p1["y"]
+                        
+                        import math
+                        angle = math.degrees(math.atan2(dy, dx))
+                        return angle
+        return 0.0
 
     # ------------------------------------------------------------------
     # Tien ich

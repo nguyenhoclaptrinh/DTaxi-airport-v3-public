@@ -6,12 +6,12 @@ class AircraftEntity:
     Đại diện cho một máy bay trong không gian mô phỏng.
     """
 
-    def __init__(self, ac_id, callsign, x, y):
+    def __init__(self, ac_id, callsign, x, y, initial_angle=0.0):
         self.id = ac_id
         self.callsign = callsign
         self.x = float(x)
         self.y = float(y)
-        self.angle = 0.0  # Hướng mũi máy bay (độ)
+        self.angle = float(initial_angle)  # Hướng mũi máy bay (độ)
 
         # Trạng thái di chuyển
         self.target_path = []  # Danh sách waypoints còn lại

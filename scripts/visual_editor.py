@@ -31,6 +31,11 @@ COLOR_LINE = (255, 220, 0)
 COLOR_LINE_SAVED = (0, 200, 100)
 COLOR_TEXT = (255, 255, 255)
 COLOR_UI_BG = (20, 20, 20, 210)
+COLOR_INIT_MODE = (255, 255, 0) # Vàng cho chế độ Initial
+
+# Cac che do cho bien
+MODE_PATH = "PATH"
+MODE_INITIAL = "INITIAL"
 
 
 def load_paths():
@@ -61,6 +66,7 @@ def draw_ui(screen, font, small_font, current_points, saved_paths, show_list, bg
         "[S] Luu Path",
         "[R] Reset",
         "[L] Hien/an danh sach Path",
+        "[I] CHE DO DAT VI TRI/GOC (Init)",
         "[ESC] Thoat",
     ]
     panel_w, panel_h = 240, len(lines) * 20 + 16
@@ -111,6 +117,31 @@ def draw_scene(screen, bg, bg_rect, current_points, saved_paths):
         col = (255, 50, 50) if i == 0 else COLOR_POINT
         pygame.draw.circle(screen, col, p, 6)
         pygame.draw.circle(screen, (255, 255, 255), p, 6, 1)
+
+def draw_initial_marker(screen, font, pos, angle, bg_x, bg_y, bg_w, bg_h):
+    """Ve ky hieu may bay tai vi tri va goc duoc chon."""
+    if not pos:
+        return
+    
+    # Ve hinh tam giac bieu dien may bay
+    size = 20
+    import math
+    rad = math.radians(angle + 90) # Bu 90 vi 0 degree la North trong tam mat tool
+    
+    p1 = (pos[0] + size * math.cos(rad - 2.5), pos[1] + size * math.sin(rad - 2.5))
+    p2 = (pos[0] + size * math.cos(rad + 2.5), pos[1] + size * math.sin(rad + 2.5))
+    p3 = (pos[0] + size * 1.5 * math.cos(rad), pos[1] + size * 1.5 * math.sin(rad))
+    
+    pygame.draw.polygon(screen, (255, 200, 0), [p1, p2, p3])
+    pygame.draw.circle(screen, (255, 255, 255), pos, 5)
+
+    # Chuyen doi sang toa do normalized
+    rel_x = (pos[0] - bg_x) / bg_w
+    rel_y = (pos[1] - bg_y) / bg_h
+    nx, ny = round(rel_x * 800), round(rel_y * 600)
+    
+    info = font.render(f"INIT: pos({nx}, {ny}) angle({int(angle)})", True, (255, 255, 0))
+    screen.blit(info, (pos[0] + 20, pos[1] + 10))
 
 
 def prompt_path_name(screen, font, small_font):
@@ -206,6 +237,10 @@ def run_editor():
 
     status_msg = ""
     status_timer = 0
+    current_mode = MODE_PATH
+    init_pos = None
+    init_angle = 0
+    is_dragging_angle = False
 
     while running:
         dt = clock.tick(60)
@@ -218,23 +253,40 @@ def run_editor():
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 mx, my = event.pos
-                if event.button == 1:  # Click trai: them diem
-                    # Doi toa do man hinh sang toa do anh (normalized ve 800x600 de dung voi metadata cu)
-                    # Luu toa do pixel goc theo ti le 800x600 de tuong thich voi engine
-                    rel_x = (mx - bg_x) / bg_w  # 0.0 -> 1.0
-                    rel_y = (my - bg_y) / bg_h
-                    # Norm sang khong gian 800x600
-                    norm_x = round(rel_x * 800)
-                    norm_y = round(rel_y * 600)
-                    current_points.append((mx, my))
-                    print(
-                        f"  Diem {len(current_points)}: screen=({mx},{my})  norm=({norm_x},{norm_y})")
+                if event.button == 1:  # Click trai
+                    if current_mode == MODE_PATH:
+                        current_points.append((mx, my))
+                        print(f"Path point: {mx}, {my}")
+                    else:
+                        init_pos = (mx, my)
+                        is_dragging_angle = True
 
-                elif event.button == 3:  # Click phai: xoa diem cuoi
-                    if current_points:
+                elif event.button == 3:  # Click phai
+                    if current_mode == MODE_PATH and current_points:
                         current_points.pop()
                         status_msg = "Da xoa diem cuoi."
                         status_timer = 2000
+
+            elif event.type == pygame.MOUSEBUTTONUP:
+                if event.button == 1:
+                    is_dragging_angle = False
+                    if current_mode == MODE_INITIAL and init_pos:
+                        # Print JSON to console
+                        rel_x = (init_pos[0] - bg_x) / bg_w
+                        rel_y = (init_pos[1] - bg_y) / bg_h
+                        nx, ny = round(rel_x * 800), round(rel_y * 600)
+                        json_snippet = f'"initial_pos": {{ "x": {nx}, "y": {ny} }}, "initial_angle": {int(init_angle)}'
+                        print(f"\n[AIRCRAFT INIT CONFIG]\n{json_snippet}\n")
+                        status_msg = "Da in toa do khoi tao vao Console!"
+                        status_timer = 3000
+
+            elif event.type == pygame.MOUSEMOTION:
+                if is_dragging_angle and init_pos:
+                    mx, my = event.pos
+                    import math
+                    init_angle = math.degrees(math.atan2(my - init_pos[1], mx - init_pos[0]))
+                    # Bu lai goc 90 neu muon hien thi dung huong North la math 0? 
+                    # Khong, atan2 dy,dx la Right=0. Dung voi Aircraft logic.
 
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
@@ -242,11 +294,23 @@ def run_editor():
 
                 elif event.key == pygame.K_r:
                     current_points = []
-                    status_msg = "Da reset lo trinh."
+                    init_pos = None
+                    init_angle = 0
+                    is_dragging_angle = False
+                    status_msg = "Da reset toan bo (Path & Init)."
                     status_timer = 2000
 
                 elif event.key == pygame.K_l:
                     show_list = not show_list
+
+                elif event.key == pygame.K_i:
+                    if current_mode == MODE_PATH:
+                        current_mode = MODE_INITIAL
+                        status_msg = "Che do DAT VI TRI KHOI TẠO. Click va keo de xoay."
+                    else:
+                        current_mode = MODE_PATH
+                        status_msg = "Che do VE LO TRÌNH (Path)."
+                    status_timer = 3000
 
                 elif event.key == pygame.K_s:
                     if len(current_points) < 2:
@@ -275,12 +339,14 @@ def run_editor():
                             status_msg = "Huy luu."
                             status_timer = 1500
 
-        # --- Ve scene ---
         draw_scene(screen, bg, bg_rect, current_points, {
             name: [(int(p["x"] / 800 * bg_w) + bg_x, int(p["y"] / 600 * bg_h) + bg_y)
                    for p in pts]
             for name, pts in saved_paths.items()
         })
+
+        if current_mode == MODE_INITIAL:
+            draw_initial_marker(screen, font, init_pos, init_angle, bg_x, bg_y, bg_w, bg_h)
 
         draw_ui(screen, font, small_font, current_points,
                 saved_paths, show_list, bg_w, bg_h)
