@@ -13,49 +13,71 @@
     {
       "id": 1,
       "timestamp": "09:00:00",
-      "message": "Vietjet 123, entering runway concept area.",
-      "action": "MOVE_ALONG_PATH",
-      "aircraft_id": "VJ123",
-      "action_data": { "path_id": "Landing22" }
+      "type": "MESSAGE",
+      "sender": "VJ123",
+      "target": "ATC",
+      "text": "Tan Son Nhat Ground, Vietjet 123, requested entering runway concept area."
     },
     {
       "id": 2,
-      "timestamp": "09:01:00",
-      "message": "Vietjet 123, taxiing via before-E4 zone.",
+      "type": "ACTION",
       "action": "MOVE_ALONG_PATH",
-      "aircraft_id": "VJ123",
-      "action_data": { "path_id": "beforeE4" }
+      "aircraft": "VJ123",
+      "path_name": "Landing22"
     },
     {
       "id": 3,
-      "timestamp": "09:02:30",
-      "message": "Vietjet 123, continuing via E4.",
-      "action": "MOVE_ALONG_PATH",
-      "aircraft_id": "VJ123",
-      "action_data": { "path_id": "E4" }
+      "timestamp": "09:01:00",
+      "type": "MESSAGE",
+      "sender": "ATC",
+      "target": "VJ123",
+      "text": "Vietjet 123, taxiing via before-E4 zone, contact Tower on 118.7."
     },
     {
       "id": 4,
-      "timestamp": "09:03:45",
-      "message": "Vietjet 123, lining up Runway 25L.",
+      "type": "ACTION",
       "action": "MOVE_ALONG_PATH",
-      "aircraft_id": "VJ123",
-      "action_data": { "path_id": "25L" }
+      "aircraft": "VJ123",
+      "path_name": "beforeE4"
     },
     {
       "id": 5,
-      "timestamp": "09:04:30",
-      "message": "Vietjet 123, cleared for takeoff Runway 25L.",
-      "action": "MESSAGE",
-      "aircraft_id": "VJ123"
+      "timestamp": "09:02:30",
+      "type": "ACTION",
+      "action": "MOVE_ALONG_PATH",
+      "aircraft": "VJ123",
+      "path_name": "E4"
     },
     {
       "id": 6,
-      "timestamp": "09:05:00",
-      "message": "Vietjet 123, Taking off now!",
+      "timestamp": "09:03:45",
+      "type": "MESSAGE",
+      "sender": "VJ123",
+      "target": "ATC",
+      "text": "Tower, Vietjet 123, lining up Runway 25L."
+    },
+    {
+      "id": 7,
+      "type": "ACTION",
       "action": "MOVE_ALONG_PATH",
-      "aircraft_id": "VJ123",
-      "action_data": { "path_id": "out25L" }
+      "aircraft": "VJ123",
+      "path_name": "25L"
+    },
+    {
+      "id": 8,
+      "timestamp": "09:04:30",
+      "type": "MESSAGE",
+      "sender": "ATC",
+      "target": "VJ123",
+      "text": "Vietjet 123, cleared for takeoff Runway 25L, wind 240/5."
+    },
+    {
+      "id": 9,
+      "timestamp": "09:05:00",
+      "type": "ACTION",
+      "action": "MOVE_ALONG_PATH",
+      "aircraft": "VJ123",
+      "path_name": "out25L"
     }
   ]
 }

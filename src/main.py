@@ -35,7 +35,7 @@ class DTaxiApp:
         """Khoi phoi du lieu ban dau."""
         try:
             self.map_renderer.init_pygame()
-            self.load_scenario("dep_01.json")
+            self.load_scenario("example-catcanh.json")
         except Exception as e:
             print(f"Setup Error: {e}")
             import traceback

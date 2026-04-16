@@ -35,6 +35,12 @@ class WindowManager:
         self.log_box.pack(padx=20, pady=10)
         self.log_box.configure(state="disabled") # Chỉ đọc
 
+        # Cấu hình màu sắc (Tags) - Tông màu đậm dành cho nền sáng
+        # Vì CTkTextbox bọc ngoài tkinter.Text, ta truy cập thông qua _textbox
+        self.log_box._textbox.tag_configure("pilot", foreground="#1E8449") # Dark Green
+        self.log_box._textbox.tag_configure("atc", foreground="#21618C")   # Dark Blue
+        self.log_box._textbox.tag_configure("system", foreground="#566573")# Dark Gray
+
         # 3. Khung điều khiển (Buttons)
         self.control_frame = ctk.CTkFrame(self.root)
         self.control_frame.pack(pady=20, fill="x", padx=20)
@@ -56,16 +62,25 @@ class WindowManager:
         self.status_label.pack(side="bottom", pady=5)
 
     def add_log(self, sender, text, target=None):
-        """Thêm một dòng tin nhắn vào log board."""
+        """Thêm một dòng tin nhắn vào log board với màu sắc phân biệt."""
         self.log_box.configure(state="normal")
         
-        tag = f"[{sender}]"
-        if target:
-            tag = f"[{sender} -> {target}]"
+        # Xác định tag màu dựa trên sender
+        tag_name = "system"
+        if sender == "ATC" or sender == "KSV":
+            tag_name = "atc"
+        elif sender != "?" and sender != "": # Mặc định là Pilot nếu có tên định danh
+            tag_name = "pilot"
+
+        header = f"[{sender}]"
+        if target and target != "?":
+            header = f"[{sender} -> {target}]"
             
-        full_msg = f"{tag}: {text}\n\n"
-        self.log_box.insert("end", full_msg)
-        self.log_box.see("end") # Auto scroll to bottom
+        full_msg = f"{header}: {text}\n\n"
+        
+        # Chèn văn bản kèm theo tag màu đã định nghĩa
+        self.log_box.insert("end", full_msg, tag_name)
+        self.log_box.see("end") # Tự động cuộn xuống cuối
         
         self.log_box.configure(state="disabled")
 
