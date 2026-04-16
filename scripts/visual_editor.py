@@ -173,7 +173,7 @@ def draw_ui(screen, font, small_font, current_points, saved_paths, show_list, bg
             screen.blit(txt, (SCREEN_W - list_w + 10, 50 + i * 22))
 
 
-def draw_scenario_ui(screen, font, small_font, scenario_data, active_ac_idx, scenario_name, show_list, saved_paths):
+def draw_scenario_ui(screen, font, small_font, scenario_data, active_ac_idx, active_step_idx, scenario_name, show_list, saved_paths):
     """Ve bang dieu khien kich ban."""
     if not scenario_data:
         return
@@ -209,8 +209,13 @@ def draw_scenario_ui(screen, font, small_font, scenario_data, active_ac_idx, sce
     screen.blit(step_header, (SCREEN_W - side_w, y))
     
     y += 25
-    max_visible_steps = 8
-    for i, step in enumerate(steps[-max_visible_steps:]):
+    max_visible_steps = 10
+    # Neu timeline dai, chi hien thi cac step xung quanh active_step_idx
+    start_idx = max(0, active_step_idx - 4) if active_step_idx >= 0 else max(0, len(steps) - max_visible_steps)
+    visible_steps = steps[start_idx : start_idx + max_visible_steps]
+
+    for i, step in enumerate(visible_steps):
+        abs_idx = start_idx + i
         stype = step.get("type", "")
         detail = ""
         if stype == "MESSAGE":
@@ -218,7 +223,11 @@ def draw_scenario_ui(screen, font, small_font, scenario_data, active_ac_idx, sce
         elif stype == "ACTION":
             detail = f"{step.get('aircraft')} {step.get('action')} {step.get('path_name', '')}"
         
-        txt = small_font.render(f"{i+1}. {stype}: {detail}", True, (120, 120, 120))
+        is_sel = (abs_idx == active_step_idx)
+        col = (255, 255, 0) if is_sel else (140, 140, 140)
+        prefix = "> " if is_sel else f"{abs_idx+1}. "
+        
+        txt = small_font.render(f"{prefix}{stype}: {detail}", True, col)
         screen.blit(txt, (SCREEN_W - side_w, y))
         y += 18
 
@@ -313,9 +322,9 @@ def draw_scenario_entities(screen, font, scenario_data, active_idx, bg_x, bg_y, 
         screen.blit(label, (sx + 15, sy - 10))
 
 
-def prompt_path_name(screen, font, small_font):
-    """Hien thi hop nhap ten Path."""
-    name = ""
+def prompt_text_input(screen, font, small_font, title_str, initial_text=""):
+    """Hien thi hop nhap van ban chung."""
+    name = initial_text
     active = True
     clock = pygame.time.Clock()
     while active:
@@ -330,7 +339,7 @@ def prompt_path_name(screen, font, small_font):
                 elif event.key == pygame.K_BACKSPACE:
                     name = name[:-1]
                 else:
-                    if len(name) < 40:
+                    if len(name) < 100:
                         name += event.unicode
 
         # Ve hop nhap
@@ -338,7 +347,7 @@ def prompt_path_name(screen, font, small_font):
         overlay.fill((0, 0, 0, 160))
         screen.blit(overlay, (0, 0))
 
-        box_w, box_h = 500, 120
+        box_w, box_h = 600, 120
         box_x = SCREEN_W // 2 - box_w // 2
         box_y = SCREEN_H // 2 - box_h // 2
         pygame.draw.rect(screen, (40, 40, 40),
@@ -346,7 +355,7 @@ def prompt_path_name(screen, font, small_font):
         pygame.draw.rect(screen, (100, 100, 200),
                          (box_x, box_y, box_w, box_h), 2, border_radius=8)
 
-        title = font.render("Dat ten cho Path nay:", True, (255, 200, 50))
+        title = font.render(title_str, True, (255, 200, 50))
         screen.blit(title, (box_x + 20, box_y + 16))
 
         # Truong nhap
@@ -365,6 +374,11 @@ def prompt_path_name(screen, font, small_font):
         clock.tick(60)
 
     return name.strip() if name.strip() else None
+
+
+def prompt_path_name(screen, font, small_font):
+    """Hien thi hop nhap ten Path (Giu lai de tuong thich code cu)."""
+    return prompt_text_input(screen, font, small_font, "Dat ten cho Path nay:")
 
 
 def list_scenario_files():
@@ -396,15 +410,30 @@ def prompt_list_selection(screen, font, small_font, title_str, items):
                 elif event.key == pygame.K_ESCAPE:
                     return None
 
-        screen.fill((20, 20, 20))
+        # Ve overlay
+        overlay = pygame.Surface((SCREEN_W, SCREEN_H), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 180))
+        screen.blit(overlay, (0, 0))
+
+        box_w, box_h = 500, min(SCREEN_H - 100, 40 + len(items) * 28 + 60)
+        box_x = SCREEN_W // 2 - box_w // 2
+        box_y = SCREEN_H // 2 - box_h // 2
+        
+        pygame.draw.rect(screen, (30, 30, 40), (box_x, box_y, box_w, box_h), border_radius=10)
+        pygame.draw.rect(screen, (80, 80, 150), (box_x, box_y, box_w, box_h), 2, border_radius=10)
+
         title = font.render(title_str, True, (255, 200, 50))
-        screen.blit(title, (50, 50))
+        screen.blit(title, (box_x + 30, box_y + 20))
         
         for i, item in enumerate(items):
-            color = (0, 255, 255) if i == selected_idx else (150, 150, 150)
-            prefix = " > " if i == selected_idx else "   "
-            txt = small_font.render(f"{prefix}{item}", True, color)
-            screen.blit(txt, (50, 100 + i * 25))
+            if 100 + i * 25 > SCREEN_H - 100: break # Simple clip
+            color = (255, 255, 255) if i == selected_idx else (150, 150, 150)
+            if i == selected_idx:
+                sel_rect = pygame.Rect(box_x + 15, box_y + 60 + i * 28, box_w - 30, 26)
+                pygame.draw.rect(screen, (60, 60, 100), sel_rect, border_radius=4)
+            
+            txt = small_font.render(f" {item}", True, color)
+            screen.blit(txt, (box_x + 35, box_y + 65 + i * 28))
 
         pygame.display.flip()
         clock.tick(60)
@@ -461,6 +490,7 @@ def run_editor():
     scenario_data = None
     scenario_name = ""
     active_ac_idx = -1
+    active_step_idx = -1
     input_boxes = []
 
     def refresh_inputs():
@@ -618,6 +648,34 @@ def run_editor():
                             active_ac_idx = (active_ac_idx + 1) % len(scenario_data["aircraft_list"])
                             refresh_inputs()
 
+                    elif event.key == pygame.K_RETURN and current_mode == MODE_INITIAL:
+                        # Áp dụng tọa độ marker cho máy bay đang chọn (nếu có kịch bản)
+                        if scenario_data and active_ac_idx >= 0:
+                            ac = scenario_data["aircraft_list"][active_ac_idx]
+                            ac["initial_pos"] = {"x": int(init_pos[0]), "y": int(init_pos[1])}
+                            ac["initial_angle"] = int(init_angle)
+                            status_msg = f"Da cap nhat vi tri Init cho {ac['id']}"
+                            status_timer = 2000
+                        else:
+                            status_msg = "Hay chon mot may bay trong Scenario truoc khi ap dung."
+                            status_timer = 2000
+
+                    elif event.key == pygame.K_UP:
+                        if scenario_data and scenario_data.get("steps"):
+                            steps_count = len(scenario_data["steps"])
+                            if active_step_idx < 0:
+                                active_step_idx = steps_count - 1
+                            else:
+                                active_step_idx = (active_step_idx - 1) % steps_count
+
+                    elif event.key == pygame.K_DOWN:
+                        if scenario_data and scenario_data.get("steps"):
+                            steps_count = len(scenario_data["steps"])
+                            if active_step_idx < 0:
+                                active_step_idx = 0
+                            else:
+                                active_step_idx = (active_step_idx + 1) % steps_count
+
                     elif event.key == pygame.K_a and current_mode == MODE_SCENARIO:
                         new_ac = {"id": "NEW", "callsign": "NEW CALLSIGN", "type": "A321", "initial_pos": {"x": 400, "y": 300}, "initial_angle": 0}
                         scenario_data["aircraft_list"].append(new_ac)
@@ -652,9 +710,67 @@ def run_editor():
                             status_msg = f"Da gan path '{chosen_path}' cho {ac_id}"
                             status_timer = 2500
 
+                    elif event.key == pygame.K_m and current_mode == MODE_SCENARIO and active_ac_idx >= 0:
+                        # Add message step
+                        text = prompt_text_input(screen, font, small_font, "NHAP TIN NHAN (SENDER: TEXT):", "Pilot: Ready for taxi")
+                        if text:
+                            sender = "Pilot"
+                            target = "ATC"
+                            if ":" in text:
+                                parts = text.split(":", 1)
+                                sender = parts[0].strip()
+                                text = parts[1].strip()
+                            
+                            new_step = {
+                                "id": len(scenario_data["steps"]) + 1,
+                                "type": "MESSAGE",
+                                "sender": sender,
+                                "target": target,
+                                "text": text
+                            }
+                            scenario_data["steps"].append(new_step)
+                            status_msg = "Da them tin nhan moi."
+                            status_timer = 2000
+
+                    elif event.key == pygame.K_RETURN and current_mode == MODE_SCENARIO and active_step_idx >= 0:
+                        # Edit selected step
+                        step = scenario_data["steps"][active_step_idx]
+                        if step["type"] == "MESSAGE":
+                            cur_val = f"{step['sender']}: {step['text']}"
+                            new_val = prompt_text_input(screen, font, small_font, "SUA TIN NHAN:", cur_val)
+                            if new_val and ":" in new_val:
+                                parts = new_val.split(":", 1)
+                                step["sender"] = parts[0].strip()
+                                step["text"] = parts[1].strip()
+                        elif step["type"] == "ACTION" and step["action"] == "MOVE_ALONG_PATH":
+                            path_files = list(saved_paths.keys())
+                            new_path = prompt_list_selection(screen, font, small_font, "DOI PATH:", path_files)
+                            if new_path:
+                                step["path_name"] = new_path
+                        status_msg = f"Da cap nhat step {active_step_idx + 1}"
+                        status_timer = 1500
+
+                    elif event.key in [pygame.K_DELETE, pygame.K_BACKSPACE] and current_mode == MODE_SCENARIO:
+                        if is_typing: continue
+                        if active_step_idx >= 0 and scenario_data and scenario_data.get("steps"):
+                            # Xoa step dang chon
+                            removed = scenario_data["steps"].pop(active_step_idx)
+                            status_msg = f"Da xoa step {active_step_idx + 1}"
+                            status_timer = 1500
+                            if active_step_idx >= len(scenario_data["steps"]):
+                                active_step_idx = len(scenario_data["steps"]) - 1
+                        elif active_ac_idx >= 0 and scenario_data:
+                            # Xoa may bay neu khong chon step
+                            ac_id = scenario_data["aircraft_list"][active_ac_idx]["id"]
+                            scenario_data["aircraft_list"].pop(active_ac_idx)
+                            status_msg = f"Da xoa may bay {ac_id}"
+                            status_timer = 2000
+                            active_ac_idx = -1
+                            refresh_inputs()
+
                     elif event.key == pygame.K_s:
                         if current_mode == MODE_PATH:
-                            # Save Path logic (already exists)
+                            # Save Path logic
                             if len(current_points) >= 2:
                                 norm_pts = [{"x": round((p[0]-bg_x)/bg_w*SCREEN_W), "y": round((p[1]-bg_y)/bg_h*SCREEN_H)} for p in current_points]
                                 pname = prompt_path_name(screen, font, small_font)
@@ -664,6 +780,14 @@ def run_editor():
                                     status_msg = f"Da luu Path '{pname}'"
                                     current_points = []
                         elif current_mode == MODE_SCENARIO and scenario_data:
+                            # Neu la file moi hoac nhan Shift+S -> Dat ten moi
+                            if not scenario_name or scenario_name == "new_scenario.json" or (pygame.key.get_mods() & pygame.KMOD_SHIFT):
+                                default_name = scenario_name if scenario_name else "my_scenario.json"
+                                new_name = prompt_text_input(screen, font, small_font, "DAT TEN FILE KICH BAN:", default_name)
+                                if new_name:
+                                    if not new_name.endswith(".json"): new_name += ".json"
+                                    scenario_name = new_name
+                            
                             save_scenario(scenario_data, scenario_name)
                             status_msg = f"Da luu kich ban: {scenario_name}"
                         status_timer = 2000
@@ -692,7 +816,7 @@ def run_editor():
             draw_initial_marker(screen, font, init_pos, init_angle, bg_x, bg_y, bg_w, bg_h)
         elif current_mode == MODE_SCENARIO and scenario_data:
             if show_scenario_ui:
-                draw_scenario_ui(screen, font, small_font, scenario_data, active_ac_idx, scenario_name, show_list, saved_paths)
+                draw_scenario_ui(screen, font, small_font, scenario_data, active_ac_idx, active_step_idx, scenario_name, show_list, saved_paths)
                 for box in input_boxes:
                     box.draw(screen)
 

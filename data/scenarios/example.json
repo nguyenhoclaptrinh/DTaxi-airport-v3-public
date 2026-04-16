@@ -1,0 +1,45 @@
+{
+  "name": "New Scenario",
+  "aircraft_list": [
+    {
+      "id": "NEW",
+      "callsign": "NEW CALLSIGN",
+      "type": "A321",
+      "initial_pos": {
+        "x": 983,
+        "y": 339
+      },
+      "initial_angle": 163
+    }
+  ],
+  "steps": [
+    {
+      "id": 1,
+      "type": "ACTION",
+      "action": "MOVE_ALONG_PATH",
+      "aircraft": "NEW",
+      "path_name": "beforeE4"
+    },
+    {
+      "id": 2,
+      "type": "ACTION",
+      "action": "MOVE_ALONG_PATH",
+      "aircraft": "NEW",
+      "path_name": "E4"
+    },
+    {
+      "id": 3,
+      "type": "ACTION",
+      "action": "MOVE_ALONG_PATH",
+      "aircraft": "NEW",
+      "path_name": "25L"
+    },
+    {
+      "id": 4,
+      "type": "MESSAGE",
+      "sender": "Pilot",
+      "target": "ATC",
+      "text": "Ready for taxi"
+    }
+  ]
+}
