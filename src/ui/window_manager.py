@@ -11,7 +11,8 @@ class WindowManager:
             on_reset, 
             on_stop, 
             on_scenario_change, 
-            on_auto_play=None
+            on_auto_play=None,
+            on_speed_change=None
     ):
         self.root = ctk.CTk()
         self.root.title("DTaxi - AeroMACS Controller")
@@ -24,6 +25,7 @@ class WindowManager:
         self.on_stop = on_stop
         self.on_scenario_change = on_scenario_change
         self.on_auto_play = on_auto_play
+        self.on_speed_change = on_speed_change
         
         self._setup_ui()
 
@@ -48,6 +50,20 @@ class WindowManager:
             command=self._handle_auto_play_toggle
         )
         self.check_auto_play.pack(pady=5)
+
+        # 1.1 Slider Speed
+        self.speed_label = ctk.CTkLabel(self.root, text="Simulation Speed: 1.0x", font=("Arial", 12))
+        self.speed_label.pack(pady=(10, 0))
+        
+        self.speed_slider = ctk.CTkSlider(
+            self.root, 
+            from_=0.5, 
+            to=8.0, 
+            number_of_steps=15, # 0.5, 1.0, 1.5 ... 8.0
+            command=self._handle_speed_slider
+        )
+        self.speed_slider.set(1.0)
+        self.speed_slider.pack(pady=5)
 
         # 2. Khung Log (Scrollable)
         self.log_box = ctk.CTkTextbox(self.root, width=360, height=400, font=("Consolas", 12))
@@ -154,6 +170,13 @@ class WindowManager:
         """Callback khi toggle checkbox AUTO PLAY."""
         if self.on_auto_play:
             self.on_auto_play(self.auto_play_var.get())
+
+    def _handle_speed_slider(self, value):
+        """Callback khi kéo thanh trượt tốc độ."""
+        text = f"Simulation Speed: {value:.1f}x"
+        self.speed_label.configure(text=text)
+        if self.on_speed_change:
+            self.on_speed_change(value)
 
     def run_step(self):
         """Cập nhật vòng lặp Tkinter."""

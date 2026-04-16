@@ -23,16 +23,18 @@ class DTaxiApp:
             on_stop=self.handle_stop,
             on_scenario_change=self.handle_scenario_change,
             on_auto_play=self.handle_auto_play_toggle,
+            on_speed_change=self.handle_speed_change,
         )
 
         self.aircraft_entities: list[AircraftEntity] = []
         self.clock = pygame.time.Clock()
         self.running = True
         
-        # Auto Play state
+        # Simulation control
         self.is_auto_play = False
         self.auto_advance_timer = 0.0
-        self.AUTO_MESSAGE_DELAY = 3.0 # Giây chờ cho mỗi tin nhắn
+        self.AUTO_MESSAGE_DELAY = 3.0 # Giay cho cho moi tin nhan
+        self.sim_speed = 1.0 # He so toc do mo phong
 
     # ------------------------------------------------------------------
     # Khoi tao
@@ -244,6 +246,10 @@ class DTaxiApp:
         else:
             self.ui_manager.set_status("AUTO PLAY Mode: Disabled")
 
+    def handle_speed_change(self, value):
+        """Thay doi toc do mo phong toan cuc."""
+        self.sim_speed = value
+
     # ------------------------------------------------------------------
     # Vong lap chinh
     # ------------------------------------------------------------------
@@ -303,7 +309,7 @@ class DTaxiApp:
 
         try:
             now = time.perf_counter()
-            delta_time = min(now - self._last_time, 0.1)
+            delta_time = min(now - self._last_time, 0.1) * self.sim_speed
             self._last_time = now
 
             # Xu ly su kien Pygame
