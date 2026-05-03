@@ -69,6 +69,7 @@ Dưới đây là sơ đồ khối mô tả cách ứng dụng kết nối giữ
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 'background': '#f4f4f4', 'primaryColor': '#21618C', 'primaryTextColor': '#fff', 'primaryBorderColor': '#1B4F72', 'lineColor': '#2E4053', 'secondaryColor': '#D5D8DC', 'tertiaryColor': '#F4F6F7' }}}%%
 graph TD
+    subgraph MainFlow [DTaxi System Flow]
     A[Bắt đầu: main.py] --> B[Khởi tạo DTaxiApp]
     B --> C[Thiết lập UI: WindowManager]
     B --> D[Khởi tạo Engine: ScenarioManager & MapRenderer]
@@ -102,6 +103,7 @@ graph TD
     U --> I
     V --> I
     P --> I
+    end
 ```
 
 ### Giải thích các thành phần chính:
