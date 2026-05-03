@@ -66,45 +66,7 @@ Dưới đây là sơ đồ khối mô tả cách ứng dụng kết nối giữ
 
 ![Sơ đồ luồng xử lý chính](docs/040-Diagrams/Main_Flow.png)
 
-```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'background': '#f4f4f4', 'primaryColor': '#21618C', 'primaryTextColor': '#fff', 'primaryBorderColor': '#1B4F72', 'lineColor': '#2E4053', 'secondaryColor': '#D5D8DC', 'tertiaryColor': '#F4F6F7' }}}%%
-graph LR
-    subgraph MainFlow [DTaxi System Flow]
-    A[Bắt đầu: main.py] --> B[Khởi tạo DTaxiApp]
-    B --> C[Thiết lập UI: WindowManager]
-    B --> D[Khởi tạo Engine: ScenarioManager & MapRenderer]
-    
-    C --> E{Người dùng chọn kịch bản?}
-    E -- Có --> F[Tải file JSON kịch bản]
-    F --> G[Khởi tạo danh sách AircraftEntity]
-    G --> H[Cập nhật UI & Bản đồ ban đầu]
-    
-    H --> I[Vòng lặp chính: update_loop]
-    
-    subgraph "Simulation Loop (Mỗi Frame)"
-        I --> J[Tính toán Delta Time * Sim Speed]
-        J --> K{Simulation Paused?}
-        K -- No --> L[Cập nhật vị trí AircraftEntity]
-        K -- Yes --> M[Giữ nguyên vị trí]
-        L --> N{Auto Play Mode?}
-        N -- Yes --> O[Kiểm tra điều kiện Auto-Next]
-        O --> P[Tự động chuyển Step nếu máy bay dừng]
-    end
-    
-    I --> Q[MapRenderer: Vẽ lại toàn bộ Scene]
-    Q --> R[WindowManager: Cập nhật Log & Status]
-    
-    R --> S{Sự kiện từ người dùng?}
-    S -- NEXT/PREV --> T[Điều hướng kịch bản]
-    S -- STOP/RESUME --> U[Bật/Tắt Pause]
-    S -- Slider --> V[Thay đổi Sim Speed]
-    
-    T --> I
-    U --> I
-    V --> I
-    P --> I
-    end
-```
+
 
 ### Giải thích các thành phần chính:
 1.  **DTaxiApp**: Trái tim của ứng dụng, điều phối giữa giao diện (Tkinter) và engine mô phỏng (Pygame).
