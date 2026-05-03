@@ -64,6 +64,8 @@ Chúc bạn có những giờ phút trải nghiệm mô phỏng thú vị! 🛫
 
 Dưới đây là sơ đồ khối mô tả cách ứng dụng kết nối giữa giao diện người dùng và engine mô phỏng vật lý:
 
+![Sơ đồ luồng xử lý chính](docs/040-Diagrams/Main_Flow.png)
+
 ```mermaid
 graph TD
     A[Bắt đầu: main.py] --> B[Khởi tạo DTaxiApp]
