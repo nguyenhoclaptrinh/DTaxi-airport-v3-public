@@ -67,7 +67,7 @@ Dưới đây là sơ đồ khối mô tả cách ứng dụng kết nối giữ
 ![Sơ đồ luồng xử lý chính](docs/040-Diagrams/Main_Flow.png)
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#21618C', 'primaryTextColor': '#fff', 'primaryBorderColor': '#1B4F72', 'lineColor': '#2E4053', 'secondaryColor': '#D5D8DC', 'tertiaryColor': '#F4F6F7' }}}%%
+%%{init: {'theme': 'base', 'themeVariables': { 'background': '#f4f4f4', 'primaryColor': '#21618C', 'primaryTextColor': '#fff', 'primaryBorderColor': '#1B4F72', 'lineColor': '#2E4053', 'secondaryColor': '#D5D8DC', 'tertiaryColor': '#F4F6F7' }}}%%
 graph TD
     A[Bắt đầu: main.py] --> B[Khởi tạo DTaxiApp]
     B --> C[Thiết lập UI: WindowManager]

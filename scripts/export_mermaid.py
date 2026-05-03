@@ -3,7 +3,7 @@ import base64
 import requests
 import os
 
-mermaid_code = """%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#21618C', 'primaryTextColor': '#fff', 'primaryBorderColor': '#1B4F72', 'lineColor': '#2E4053', 'secondaryColor': '#D5D8DC', 'tertiaryColor': '#F4F6F7' }}}%%
+mermaid_code = """%%{init: {'theme': 'base', 'themeVariables': { 'background': '#f4f4f4', 'primaryColor': '#21618C', 'primaryTextColor': '#fff', 'primaryBorderColor': '#1B4F72', 'lineColor': '#2E4053', 'secondaryColor': '#D5D8DC', 'tertiaryColor': '#F4F6F7' }}}%%
 graph TD
     A[Bắt đầu: main.py] --> B[Khởi tạo DTaxiApp]
     B --> C[Thiết lập UI: WindowManager]
