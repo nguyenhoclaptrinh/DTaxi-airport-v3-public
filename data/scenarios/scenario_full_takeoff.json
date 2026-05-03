@@ -1,0 +1,75 @@
+{
+  "name": "Kịch bản Full Take-Off (Bản đồ mới)",
+  "scenario_id": "FULL_TAKEOFF_01",
+  "aircraft_list": [
+    {
+      "id": "VNA123",
+      "callsign": "VN-A123",
+      "type": "A321",
+      "initial_pos": {
+        "x": 787,
+        "y": 438
+      },
+      "initial_angle": 125
+    }
+  ],
+  "steps": [
+    {
+      "id": 1,
+      "type": "MESSAGE",
+      "sender": "Pilot",
+      "target": "D-TAXI",
+      "text": "VN-A123 REQUEST PUSHBACK AND START-UP",
+      "timestamp": "08:00:00"
+    },
+    {
+      "id": 2,
+      "type": "MESSAGE",
+      "sender": "KSV",
+      "target": "D-TAXI",
+      "text": "VN-A123 CLEARED PUSHBACK AND START-UP. TAXI TO RUNWAY 25L VIA FULL ROUTE.",
+      "timestamp": "08:00:15"
+    },
+    {
+      "id": 3,
+      "type": "MESSAGE",
+      "sender": "Pilot",
+      "target": "D-TAXI",
+      "text": "WILCO, TAXI TO 25L - VN-A123",
+      "timestamp": "08:00:30"
+    },
+    {
+      "id": 4,
+      "type": "ACTION",
+      "action": "MOVE_ALONG_PATH",
+      "aircraft": "VNA123",
+      "path_name": "fullPathTakeOff",
+      "report_text": "TAXIING VIA FULL ROUTE",
+      "timestamp": "08:00:45"
+    },
+    {
+      "id": 5,
+      "type": "MESSAGE",
+      "sender": "KSV",
+      "target": "D-TAXI",
+      "text": "VN-A123, WIND 240/12, RWY 25L, CLEARED FOR TAKE OFF.",
+      "timestamp": "08:02:00"
+    },
+    {
+      "id": 6,
+      "type": "MESSAGE",
+      "sender": "Pilot",
+      "target": "D-TAXI",
+      "text": "CLEARED FOR TAKE OFF, VN-A123",
+      "timestamp": "08:02:15"
+    },
+    {
+      "id": 7,
+      "type": "MESSAGE",
+      "sender": "SYSTEM",
+      "target": "D-TAXI",
+      "text": "VN-A123 AIRBORNE. SWITCHING TO VDL/SATCOM.",
+      "timestamp": "08:03:00"
+    }
+  ]
+}

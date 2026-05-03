@@ -38,12 +38,17 @@ class MapRenderer:
 
     def load_assets(self):
         """Tải các tệp hình ảnh."""
-        # Ưu tiên tsn_airport_map.jpg, nếu không có thì dùng airport_map.png
-        map_path_jpg = os.path.join("assets", "images", "tsn_airport_map.jpg")
+        # Ưu tiên tsn_airport_map_1.jpg, nếu không có thì dùng tsn_airport_map.jpg
+        map_path_new = os.path.join("assets", "images", "tsn_airport_map_1.jpg")
+        map_path_old = os.path.join("assets", "images", "tsn_airport_map.jpg")
         map_path_png = os.path.join("assets", "images", "airport_map.png")
 
-        target_path = map_path_jpg if os.path.exists(
-            map_path_jpg) else map_path_png
+        if os.path.exists(map_path_new):
+            target_path = map_path_new
+        elif os.path.exists(map_path_old):
+            target_path = map_path_old
+        else:
+            target_path = map_path_png
 
         if os.path.exists(target_path):
             self.background_image = pygame.image.load(target_path).convert()

@@ -139,11 +139,11 @@ class DTaxiApp:
 
             elif action == "MOVE_ALONG_PATH":
                 path_name = step.get("path_name", "")
-                speed = step.get("speed", 5)
+                speed = step.get("speed") # Co the None de dung auto-speed
                 path_coords = self.scenario_manager.resolve_path(path_name)
                 
                 if add_to_log:
-                    self.ui_manager.add_log("SYSTEM", f"{ac_id} moving via '{path_name}' (Speed: {speed})")
+                    self.ui_manager.add_log("SYSTEM", f"{ac_id} moving via '{path_name}'")
 
                 if start_movement and path_coords:
                     for entity in self.aircraft_entities:
@@ -287,6 +287,12 @@ class DTaxiApp:
                     can_advance = True
             
             if can_advance:
+                # KIEM TRA: Neu ACTION nay co report_text, tu dong in ra truoc khi sang buoc moi
+                if step_type == "ACTION" and current.get("report_text"):
+                    ac_id = current.get("aircraft")
+                    report = current.get("report_text")
+                    self.ui_manager.add_log("D-TAXI", f"POSITION REPORT: {ac_id} {report}")
+
                 if self.scenario_manager.is_finished():
                     # Kich ban ket thuc tai buoc cuoi cung
                     # Day index len total_steps de get_current_step() tra ve None

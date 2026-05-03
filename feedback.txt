@@ -1,0 +1,99 @@
+này là đoạn hội thoại tiêu chuẩn nhen. Nguyên chèn giúp tui nhen
+Pilot → Hệ thống D-TAXI (Gửi yêu cầu):
+
+*"VN-A123 REQUEST PUSHBACK AND START-UP"*
+
+KSV (nhận tín hiệu qua AeroMACS):
+
+*(Hệ thống hiển thị yêu cầu từ VN-A123 trên màn hình ATC)*
+
+KSV → Hệ thống D-TAXI (Trả lời):
+
+*"VN-A123 CLEARED PUSHBACK AND START-UP. REQUEST TAXI ROUTE VIA TAXIWAY A – B – C, HOLDING POINT RWY 25R."*
+
+Pilot (nhận lệnh trên màn hình EFB / FMS):
+
+(Đọc lệnh, kiểm tra bản đồ di chuyển AMM)
+
+Pilot → Hệ thống D-TAXI (Xác nhận):
+
+*"VN-A123 WILCO. PUSHBACK AND START-UP CLEARED, ROUTE CONFIRMED."*
+
+KSV (xác nhận phi công đã chấp thuận):
+
+*(Hệ thống báo "WILCO received from VN-A123)*
+
+GIAI ĐOẠN 2: TAXI TỪ BÃI ĐỖ ĐẾN ĐIỂM CHỜ (HOLDING POINT)
+Pilot (sau khi khởi động xong động cơ, bắt đầu lăn):
+
+(Hệ thống tự động gửi) *"VN-A123 TAXI STARTED"*
+
+KSV → Hệ thống D-TAXI (Gửi lộ trình chi tiết):
+
+*"VN-A123 FOLLOW TAXI ROUTE A → B → C. REPORT HOLDING POINT RWY 25R."*
+
+Pilot (kiểm tra lộ trình trên bản đồ di chuyển):
+
+(Hiển thị TUYẾN ĐƯỜNG GỢI Ý trên màn hình)
+
+Pilot → Hệ thống D-TAXI:
+
+*"VN-A123 WILCO, FOLLOWING ROUTE"*
+
+Trong quá trình lăn:
+
+(Tự động gửi báo cáo vị trí qua từng node)
+
+Hệ thống D-TAXI (tự báo cáo):
+
+*"POSITION REPORT: VN-A123 PASSED NODE B"*
+*"POSITION REPORT: VN-A123 PASSED NODE C"*
+
+KSV (giám sát):
+
+(Hệ thống hiển thị vị trí thời gian thực trên màn hình A-SMGCS)
+
+GIAI ĐOẠN 3: ĐẾN ĐIỂM CHỜ (HOLDING POINT) – CHỜ ƯU TIÊN
+Pilot (đến điểm chờ trước đường CHC 25R):
+
+(Hệ thống tự gửi) *"VN-A123 AT HOLDING POINT RWY 25R"*
+
+KSV (do đường CHC bận, tàu bay hạ cánh đang tiếp cận):
+
+*"VN-A123 HOLD POSITION. TRAFFIC ON FINAL RUNWAY 25R."*
+
+Pilot (nhận lệnh giữ nguyên vị trí):
+
+*"VN-A123 WILCO, HOLDING"*
+
+KSV (sau khi tàu bay hạ cánh đã rời khỏi):
+
+*"VN-A123 LINE UP AND WAIT RUNWAY 25R."*
+
+Pilot (nhận lệnh, bắt đầu di chuyển vào đường CHC):
+
+*"VN-A123 WILCO, LINING UP RUNWAY 25R"*
+
+GIAI ĐOẠN 4: CẤT CÁNH
+KSV (sau khi kiểm tra tàu bay đã sẵn sàng và không có vật cản):
+
+*"VN-A123 WIND 240 DEGREES 8 KNOTS, RWY 25L, CLEARED FOR TAKE OFF ."*
+
+Pilot (đọc lại lệnh trên màn hình và xác nhận):
+
+*"CLEARED FOR TAKE OFF - VN A-123"*
+
+Pilot chạy đà cất cánh:
+
+(Hệ thống AeroMACS tự động ngắt kết nối khi rời khỏi mặt đất)
+
+Hệ thống D-TAXI (báo hiệu cuối):
+
+*"VN-A123 AIRBORNE. AeroMACS DISCONNECTED. SWITCHING TO VDL/SATCOM."*
+
+KSV (chuyển tàu bay sang tần số điều hành đường dài – nếu cần):
+
+(Hệ thống báo hiệu tàu bay đã rời khu vực sân bay)
+[Tập tin: Tham số.pdf]
+này là tham số đầu vô cho kịch bản mô phỏng á N
+Nguyên đổi chữ AeroMACS thành D-TAXI giùm tui nhe

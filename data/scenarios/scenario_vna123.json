@@ -1,0 +1,151 @@
+{
+  "name": "Kịch bản VN-A123 Tiêu chuẩn (D-TAXI)",
+  "scenario_id": "VNA123_STD",
+  "aircraft_list": [
+    {
+      "id": "VNA123",
+      "callsign": "VN-A123",
+      "type": "A321",
+      "initial_pos": {
+        "x": 979,
+        "y": 335
+      },
+      "initial_angle": 125
+    }
+  ],
+  "steps": [
+    {
+      "id": 1,
+      "type": "MESSAGE",
+      "sender": "Pilot",
+      "target": "D-TAXI",
+      "text": "VN-A123 REQUEST PUSHBACK AND START-UP",
+      "timestamp": "12:00:00"
+    },
+    {
+      "id": 2,
+      "type": "MESSAGE",
+      "sender": "KSV",
+      "target": "D-TAXI",
+      "text": "VN-A123 CLEARED PUSHBACK AND START-UP. REQUEST TAXI ROUTE VIA TAXIWAY A – B – C, HOLDING POINT RWY 25R.",
+      "timestamp": "12:00:15"
+    },
+    {
+      "id": 3,
+      "type": "MESSAGE",
+      "sender": "Pilot",
+      "target": "D-TAXI",
+      "text": "VN-A123 WILCO. PUSHBACK AND START-UP CLEARED, ROUTE CONFIRMED.",
+      "timestamp": "12:00:30"
+    },
+    {
+      "id": 4,
+      "type": "ACTION",
+      "action": "MOVE_ALONG_PATH",
+      "aircraft": "VNA123",
+      "path_name": "taxiway_A",
+      "report_text": "TAXI STARTED",
+      "timestamp": "12:00:45"
+    },
+    {
+      "id": 5,
+      "type": "MESSAGE",
+      "sender": "KSV",
+      "target": "D-TAXI",
+      "text": "VN-A123 FOLLOW TAXI ROUTE A -> B -> C. REPORT HOLDING POINT RWY 25R.",
+      "timestamp": "12:01:00"
+    },
+    {
+      "id": 6,
+      "type": "MESSAGE",
+      "sender": "Pilot",
+      "target": "D-TAXI",
+      "text": "VN-A123 WILCO, FOLLOWING ROUTE",
+      "timestamp": "12:01:10"
+    },
+    {
+      "id": 7,
+      "type": "ACTION",
+      "action": "MOVE_ALONG_PATH",
+      "aircraft": "VNA123",
+      "path_name": "taxiway_B",
+      "report_text": "PASSED NODE B",
+      "timestamp": "12:01:20"
+    },
+    {
+      "id": 8,
+      "type": "ACTION",
+      "action": "MOVE_ALONG_PATH",
+      "aircraft": "VNA123",
+      "path_name": "taxiway_C",
+      "report_text": "PASSED NODE C",
+      "timestamp": "12:01:40"
+    },
+    {
+      "id": 9,
+      "type": "ACTION",
+      "action": "MOVE_ALONG_PATH",
+      "aircraft": "VNA123",
+      "path_name": "rwy_25L_entry",
+      "report_text": "AT HOLDING POINT RWY 25R",
+      "timestamp": "12:02:10"
+    },
+    {
+      "id": 10,
+      "type": "MESSAGE",
+      "sender": "KSV",
+      "target": "D-TAXI",
+      "text": "VN-A123 HOLD POSITION. TRAFFIC ON FINAL RUNWAY 25R.",
+      "timestamp": "12:02:30"
+    },
+    {
+      "id": 11,
+      "type": "MESSAGE",
+      "sender": "Pilot",
+      "target": "D-TAXI",
+      "text": "VN-A123 WILCO, HOLDING",
+      "timestamp": "12:02:45"
+    },
+    {
+      "id": 12,
+      "type": "MESSAGE",
+      "sender": "KSV",
+      "target": "D-TAXI",
+      "text": "VN-A123 LINE UP AND WAIT RUNWAY 25R.",
+      "timestamp": "12:03:00"
+    },
+    {
+      "id": 13,
+      "type": "ACTION",
+      "action": "MOVE_ALONG_PATH",
+      "aircraft": "VNA123",
+      "path_name": "rwy_25L_takeoff",
+      "report_text": "LINING UP RUNWAY 25R",
+      "timestamp": "12:03:15"
+    },
+    {
+      "id": 14,
+      "type": "MESSAGE",
+      "sender": "KSV",
+      "target": "D-TAXI",
+      "text": "VN-A123 WIND 240 DEGREES 8 KNOTS, RWY 25L, CLEARED FOR TAKE OFF.",
+      "timestamp": "12:03:45"
+    },
+    {
+      "id": 15,
+      "type": "MESSAGE",
+      "sender": "Pilot",
+      "target": "D-TAXI",
+      "text": "CLEARED FOR TAKE OFF - VN A-123",
+      "timestamp": "12:04:00"
+    },
+    {
+      "id": 16,
+      "type": "MESSAGE",
+      "sender": "SYSTEM",
+      "target": "D-TAXI",
+      "text": "VN-A123 AIRBORNE. D-TAXI DISCONNECTED. SWITCHING TO VDL/SATCOM.",
+      "timestamp": "12:04:30"
+    }
+  ]
+}

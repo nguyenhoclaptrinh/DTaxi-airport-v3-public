@@ -15,7 +15,7 @@ class WindowManager:
             on_speed_change=None
     ):
         self.root = ctk.CTk()
-        self.root.title("DTaxi - AeroMACS Controller")
+        self.root.title("DTaxi - D-TAXI Controller")
         self.root.geometry("400x744")
         
         # Callbacks
@@ -31,8 +31,12 @@ class WindowManager:
 
     def _setup_ui(self):
         # 1. Tiêu đề & Chọn kịch bản
-        self.label_title = ctk.CTkLabel(self.root, text="AeroMACS LOG", font=("Roboto", 20, "bold"))
+        self.label_title = ctk.CTkLabel(self.root, text="D-TAXI LOG", font=("Roboto", 20, "bold"))
         self.label_title.pack(pady=(20, 5))
+
+        # Thong so RCP/Latency
+        self.comm_label = ctk.CTkLabel(self.root, text="Comm: RCP 240 | Latency <= 15ms", font=("Arial", 10, "italic"), text_color="gray")
+        self.comm_label.pack(pady=(0, 5))
 
         self.scenario_selector = ctk.CTkOptionMenu(
             self.root, 
@@ -58,8 +62,8 @@ class WindowManager:
         self.speed_slider = ctk.CTkSlider(
             self.root, 
             from_=0.5, 
-            to=8.0, 
-            number_of_steps=15, # 0.5, 1.0, 1.5 ... 8.0
+            to=32.0, 
+            number_of_steps=63, # 0.5, 1.0, 1.5 ... 32.0
             command=self._handle_speed_slider
         )
         self.speed_slider.set(1.0)

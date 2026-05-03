@@ -1,0 +1,52 @@
+Tham số Giá trị đề xuất Đơn vị 
+Thông số RCP (Required Communication Performance) 
+Loại RCP áp dụng RCP 240  
+Transaction Time tối đa 240 giây 
+1. Thông số hạ tầng 
+đường CHC (Runway) 
+2 (07L/25R và 
+07R/25L) 
+Đường 
+Chiều dài Runway 
+07L/25R 
+3.048 mét 
+Chiều rộng 45 mét 
+Chiều dài Runway 
+07R/25L 
+3.800 mét 
+Thông số đường lăn (Taxiway) 
+Số lượng đường lăn 
+chính 
+4-5 Đường 
+Loại đường lăn Đường lăn thoát nhanh, 
+Đường lăn song song 
+ 
+Thông số vận hành sân bay (Operational) 
+Công suất khai thác sau 
+nâng cấp 
+40 Chuyến/giờ 
+Số lượng tàu bay mô 
+phỏng (giờ cao điểm) 
+>=2 t Tàu bay 
+Thông số di chuyển mặt đất 
+Tốc độ lăn – đường thẳng 5.0(18) m/s (km/h) 
+Tốc độ lăn – khúc cua 2.78 (10) m/s (km/h) 
+Khoảng cách an toàn tối 
+thiểu 
+150 mét 
+Thông số AeroMACS 
+Công nghệ nền tảng AeroMACS (IEEE 
+802.16e) 
+ 
+Độ trễ truyền thông tối đa <= 15 ms 
+Thông số bộ thông điệp D-TAXI 
+Các loại thông điệp bắt 
+buộc 
+REQUEST, 
+CLEARANCE, 
+WILCO, UNABLE, 
+POSTION_REPORT 
+ 
+8. Thông số mô phỏng   
+Tổng thời gian mô phỏng 900 giây 
+Bước thời gian 0.1 giây

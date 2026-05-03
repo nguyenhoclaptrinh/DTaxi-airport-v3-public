@@ -20,7 +20,7 @@ import sys
 import math
 
 # --- Cau hinh ---
-MAP_IMAGE = os.path.join("assets", "images", "tsn_airport_map.jpg")
+MAP_IMAGE = os.path.join("assets", "images", "tsn_airport_map_1.jpg")
 PATHS_FILE = os.path.join("data", "paths.json")
 SCREEN_W, SCREEN_H = 1200, 744
 
@@ -221,7 +221,8 @@ def draw_scenario_ui(screen, font, small_font, scenario_data, active_ac_idx, act
         if stype == "MESSAGE":
             detail = f"{step.get('sender')} -> {step.get('text')[:15]}..."
         elif stype == "ACTION":
-            detail = f"{step.get('aircraft')} {step.get('action')} {step.get('path_name', '')}"
+            report = f" ({step.get('report_text')})" if step.get('report_text') else ""
+            detail = f"{step.get('aircraft')} {step.get('action')} {step.get('path_name', '')}{report}"
         
         is_sel = (abs_idx == active_step_idx)
         col = (255, 255, 0) if is_sel else (140, 140, 140)
@@ -698,13 +699,14 @@ def run_editor():
                         path_files = list(saved_paths.keys())
                         chosen_path = prompt_list_selection(screen, font, small_font, "CHON PATH DE GAN:", path_files)
                         if chosen_path:
-                            ac_id = scenario_data["aircraft_list"][active_ac_idx]["id"]
+                            report = prompt_text_input(screen, font, small_font, "NHAP REPORT TEXT (AUTO MSG):", "")
                             new_step = {
                                 "id": len(scenario_data["steps"]) + 1,
                                 "type": "ACTION",
                                 "action": "MOVE_ALONG_PATH",
                                 "aircraft": ac_id,
-                                "path_name": chosen_path
+                                "path_name": chosen_path,
+                                "report_text": report
                             }
                             scenario_data["steps"].append(new_step)
                             status_msg = f"Da gan path '{chosen_path}' cho {ac_id}"
@@ -715,7 +717,7 @@ def run_editor():
                         text = prompt_text_input(screen, font, small_font, "NHAP TIN NHAN (SENDER: TEXT):", "Pilot: Ready for taxi")
                         if text:
                             sender = "Pilot"
-                            target = "ATC"
+                            target = "D-TAXI"
                             if ":" in text:
                                 parts = text.split(":", 1)
                                 sender = parts[0].strip()
@@ -747,6 +749,10 @@ def run_editor():
                             new_path = prompt_list_selection(screen, font, small_font, "DOI PATH:", path_files)
                             if new_path:
                                 step["path_name"] = new_path
+                            # Cho phep sua ca report_text
+                            new_report = prompt_text_input(screen, font, small_font, "SUA REPORT TEXT:", step.get("report_text", ""))
+                            if new_report is not None:
+                                step["report_text"] = new_report
                         status_msg = f"Da cap nhat step {active_step_idx + 1}"
                         status_timer = 1500
 
