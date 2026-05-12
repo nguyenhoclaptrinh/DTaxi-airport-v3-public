@@ -19,6 +19,9 @@ import os
 import sys
 import math
 
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+from engine.scenario_validator import ScenarioValidator
+
 # --- Cau hinh ---
 MAP_IMAGE = os.path.join("assets", "images", "tsn_airport_map_1.jpg")
 PATHS_FILE = os.path.join("data", "paths.json")
@@ -117,6 +120,11 @@ def save_scenario(data, name):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
     print(f"Da luu kich ban vao: {path}")
+
+
+def validate_scenario(data, paths_data):
+    """Validate scenario truoc/sau khi luu tu editor."""
+    return ScenarioValidator().validate(data, paths_data)
 
 
 def draw_ui(screen, font, small_font, current_points, saved_paths, show_list, bg_w, bg_h):
@@ -696,6 +704,8 @@ def run_editor():
 
                     elif event.key == pygame.K_p and current_mode == MODE_SCENARIO and active_ac_idx >= 0:
                         # Assign path to aircraft
+                        ac = scenario_data["aircraft_list"][active_ac_idx]
+                        ac_id = ac.get("id")
                         path_files = list(saved_paths.keys())
                         chosen_path = prompt_list_selection(screen, font, small_font, "CHON PATH DE GAN:", path_files)
                         if chosen_path:
@@ -795,7 +805,14 @@ def run_editor():
                                     scenario_name = new_name
                             
                             save_scenario(scenario_data, scenario_name)
-                            status_msg = f"Da luu kich ban: {scenario_name}"
+                            issues = validate_scenario(scenario_data, saved_paths)
+                            if issues:
+                                print("[VALIDATION WARNING]")
+                                for issue in issues:
+                                    print(f"- {issue}")
+                                status_msg = f"Da luu {scenario_name} ({len(issues)} validation warning)"
+                            else:
+                                status_msg = f"Da luu kich ban: {scenario_name}"
                         status_timer = 2000
 
                     elif event.key == pygame.K_r:

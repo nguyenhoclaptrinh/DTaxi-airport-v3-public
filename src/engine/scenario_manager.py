@@ -1,5 +1,6 @@
 import json
 import os
+from engine.scenario_validator import ScenarioValidator
 
 
 class ScenarioManager:
@@ -23,9 +24,11 @@ class ScenarioManager:
         self.scenario_data = None
         self.current_step_index = -1
         self.aircraft_states: dict = {}
+        self.initial_aircraft_states: dict = {}
         self.paths: dict = {}          # {"path_name": [{"x":..,"y":..}, ...]}
         self._step_index_map: dict = {}  # {step_id: list_index}
         self.is_paused: bool = False
+        self.validation_issues: list[str] = []
 
     # ------------------------------------------------------------------
     # Load
@@ -47,6 +50,11 @@ class ScenarioManager:
             with open(self.PATHS_FILE, "r", encoding="utf-8") as f:
                 self.paths = json.load(f)
 
+        self.validation_issues = ScenarioValidator().validate(
+            self.scenario_data,
+            self.paths,
+        )
+
         # Xay dung step_index_map
         self._step_index_map = {}
         steps = self.scenario_data.get("steps", [])
@@ -59,6 +67,7 @@ class ScenarioManager:
         self.current_step_index = -1
         self.is_paused = False
         self.aircraft_states = {}
+        self.initial_aircraft_states = {}
 
         # Khoi tao trang thai may bay
         for ac in self.scenario_data.get("aircraft_list", []):
@@ -69,12 +78,17 @@ class ScenarioManager:
             if initial_angle is None:
                 initial_angle = self._auto_calculate_initial_angle(ac["id"], init_pos)
 
-            self.aircraft_states[ac["id"]] = {
+            state = {
                 "callsign": ac["callsign"],
                 "type": ac.get("type", "Unknown"),
                 "pos": dict(init_pos),
                 "angle": float(initial_angle),
                 "speed": 0.0,
+            }
+            self.aircraft_states[ac["id"]] = dict(state)
+            self.initial_aircraft_states[ac["id"]] = {
+                **state,
+                "pos": dict(init_pos),
             }
 
         return self.get_current_step()
@@ -131,13 +145,13 @@ class ScenarioManager:
         self.is_paused = False
         for ac in self.scenario_data.get("aircraft_list", []):
             ac_id = ac["id"]
-            init_pos = ac.get("initial_pos", {"x": 0, "y": 0})
-            
-            # Lay lai goc ban dau (da duoc tinh o load_scenario)
-            init_angle = self.aircraft_states[ac_id].get("angle", 0.0)
-            
+            initial_state = self.initial_aircraft_states.get(ac_id, {})
+            init_pos = initial_state.get("pos", ac.get("initial_pos", {"x": 0, "y": 0}))
+            init_angle = initial_state.get("angle", 0.0)
+
             self.aircraft_states[ac_id]["pos"] = dict(init_pos)
             self.aircraft_states[ac_id]["angle"] = init_angle
+            self.aircraft_states[ac_id]["speed"] = 0.0
         return self.get_current_step()
 
     def _auto_calculate_initial_angle(self, aircraft_id: str, start_pos: dict) -> float:
@@ -188,6 +202,13 @@ class ScenarioManager:
         if ac_id in self.aircraft_states:
             self.aircraft_states[ac_id]["angle"] = angle
 
+    def update_aircraft_state(self, ac_id: str, pos: dict, angle: float, speed: float):
+        """Dong bo day du trang thai runtime cua mot may bay."""
+        if ac_id in self.aircraft_states:
+            self.aircraft_states[ac_id]["pos"] = pos
+            self.aircraft_states[ac_id]["angle"] = angle
+            self.aircraft_states[ac_id]["speed"] = speed
+
     def is_finished(self) -> bool:
         """Kiem tra kich ban da ket thuc chua."""
         steps = self.scenario_data.get("steps", [])
@@ -203,9 +224,10 @@ class ScenarioManager:
         current = self.current_step_index + 1
         return {
             "id": self.scenario_data.get("scenario_id"),
-            "name": self.scenario_data.get("scenario_name"),
+            "name": self.scenario_data.get("scenario_name") or self.scenario_data.get("name"),
             "total_steps": total,
             "current_step": current,
             "progress_pct": round(current / total * 100) if total > 0 else 0,
             "is_paused": self.is_paused,
+            "validation_issues": list(self.validation_issues),
         }

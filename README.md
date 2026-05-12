@@ -39,9 +39,9 @@ python scripts/visual_editor.py
 ### Trong Simulator (`main.py`)
 - **Chọn kịch bản**: Sử dụng menu thả xuống để chọn file kịch bản (JSON).
 - **Điều khiển**: 
-    - Nút **NEXT**: Chuyển sang bước tiếp theo trong hội thoại.
-    - Nút **STOP/RESUME**: Tạm dừng hoặc tiếp tục di chuyển.
-    - Nút **PREV**: Quay lại bước trước đó (xóa log cũ).
+    - Nút **NEXT**: Nếu máy bay đang chạy action thì hoàn tất action hiện tại; nếu đang đứng thì chuyển sang và bắt đầu step kế tiếp.
+    - Nút **PAUSE/RESUME**: Tạm dừng hoặc tiếp tục mô phỏng.
+    - Nút **PREV**: Hoàn tác đúng một step gần nhất, bao gồm log và trạng thái máy bay.
 - **Tốc độ**: Kéo thanh trượt để tăng tốc mô phỏng lên tới **x32**.
 - **Chế độ AUTO PLAY**: Tự động chạy toàn bộ kịch bản mà không cần nhấn nút.
 
@@ -50,6 +50,13 @@ python scripts/visual_editor.py
 - **Phím S**: Lưu lại các đường dẫn vào file `data/paths.json`.
 - **Phím R**: Xóa path đang vẽ để vẽ lại.
 - **Phím D**: Xóa path cuối cùng trong danh sách.
+
+### Kiểm tra dữ liệu kịch bản
+```bash
+python scripts/validate_scenarios.py
+```
+
+Script này kiểm tra các file trong `data/scenarios` có tham chiếu đúng tới aircraft và path trong `data/paths.json` hay không.
 
 ---
 

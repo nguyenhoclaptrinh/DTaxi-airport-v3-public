@@ -52,7 +52,8 @@ flowchart TD
     
     CheckQuit -- Sai --> UpdateEntities[Loop qua từng AircraftEntity]
     UpdateEntities --> EntityUpdate["entity.update(delta_time)"]
-    EntityUpdate --> DrawMap["map_renderer.draw(...)"]
+    EntityUpdate --> SyncState["ScenarioManager.update_aircraft_state()"]
+    SyncState --> DrawMap["map_renderer.draw(...)"]
     
     DrawMap --> ScheduleNext["Lên lịch gọi lại: root.after(20, update_loop)"]
     ScheduleNext --> Wait((Chờ 20ms))
@@ -92,26 +93,32 @@ sequenceDiagram
     participant SM as ScenarioManager
     participant Entity as AircraftEntity
 
-    alt Nhấn nút NEXT (Chuyển bước kế tiếp)
+    alt Nhấn nút NEXT khi action đang chạy
         User->>WM: Click NEXT
         WM->>App: handle_next()
-        App->>Entity: complete_path() (Ép máy bay nhảy tới điểm đích cuối của bước cũ nếu chưa tới nơi)
+        App->>Entity: complete_path() (Hoàn tất action hiện tại)
+        App->>SM: update_aircraft_state()
+        App->>WM: set_status("Hành động hoàn tất")
+
+    else Nhấn NEXT khi không có action đang chạy
+        User->>WM: Click NEXT
+        WM->>App: handle_next()
+        App->>App: _record_history_snapshot()
         App->>SM: next_step()
         SM-->>App: return step_data
-        App->>App: _trigger_step_actions(start_movement=True)
-        App->>WM: add_log(messages) (Hiển thị tin nhắn vô tuyến mới)
-        App->>Entity: set_path(path, speed) (Bắt đầu di chuyển cho bước mới)
+        App->>App: _apply_step(start_movement=True)
+        App->>WM: add_log(...) nếu là MESSAGE/ACTION log
+        App->>Entity: set_path(path, speed) nếu là MOVE_ALONG_PATH
         App->>WM: set_status(...)
         
-    else Nhấn nút PREV (Trở về bước trước)
+    else Nhấn nút PREV (Hoàn tác một step)
         User->>WM: Click PREV
         WM->>App: handle_prev()
-        App->>SM: prev_step()
-        SM-->>App: return step_data
-        App->>Entity: teleport(start_pos) (Hủy path cũ, quay ngược về vị trí khởi đầu của bước này)
-        App->>WM: clear_log()
-        App->>App: _trigger_step_actions(start_movement=False) (Chỉ nạp lại log tin nhắn, bỏ qua phần di chuyển)
-        App->>WM: add_log(messages)
+        App->>App: pop step_history snapshot
+        App->>SM: restore current_step_index/is_paused
+        App->>Entity: restore_state(snapshot)
+        App->>WM: set_log_entries(snapshot)
+        App->>WM: set_status(...)
         
     else Nhấn nút RESET SCENARIO
         User->>WM: Click RESET

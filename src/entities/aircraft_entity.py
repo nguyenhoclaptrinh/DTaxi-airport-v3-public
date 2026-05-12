@@ -140,3 +140,34 @@ class AircraftEntity:
 
     def get_pos(self):
         return {"x": self.x, "y": self.y}
+
+    def get_state(self):
+        """Tra ve snapshot du trang thai de undo/replay."""
+        return {
+            "id": self.id,
+            "callsign": self.callsign,
+            "x": self.x,
+            "y": self.y,
+            "angle": self.angle,
+            "target_path": [dict(p) for p in self.target_path],
+            "target_speed": self.target_speed,
+            "current_speed": self.current_speed,
+            "is_moving": self.is_moving,
+            "arrival_threshold": self.arrival_threshold,
+        }
+
+    def restore_state(self, state: dict):
+        """Khoi phuc snapshot duoc tao boi get_state()."""
+        self.x = float(state.get("x", self.x))
+        self.y = float(state.get("y", self.y))
+        self.angle = float(state.get("angle", self.angle))
+        self.target_path = [
+            {"x": float(p["x"]), "y": float(p["y"])}
+            for p in state.get("target_path", [])
+        ]
+        self.target_speed = float(state.get("target_speed", 0.0))
+        self.current_speed = float(state.get("current_speed", 0.0))
+        self.is_moving = bool(state.get("is_moving", False))
+        self.arrival_threshold = float(
+            state.get("arrival_threshold", self.arrival_threshold)
+        )

@@ -35,13 +35,81 @@ class DTaxiApp:
         self.auto_advance_timer = 0.0
         self.AUTO_MESSAGE_DELAY = 3.0 # Giay cho cho moi tin nhan
         self.sim_speed = 1.0 # He so toc do mo phong
+        self.step_history: list[dict] = []
 
     # ------------------------------------------------------------------
     # Khoi tao
     # ------------------------------------------------------------------
     def set_stop_state(self, paused: bool):
-        """Cap nhat trang thai nut Stop/Resume."""
+        """Cap nhat trang thai nut Pause/Resume."""
         self.ui_manager.set_stop_state(paused)
+
+    def _sync_aircraft_state(self, entity: AircraftEntity):
+        """Dong bo entity dang render ve ScenarioManager."""
+        self.scenario_manager.update_aircraft_state(
+            entity.id,
+            {"x": entity.x, "y": entity.y},
+            entity.angle,
+            entity.current_speed,
+        )
+
+    def _record_history_snapshot(self):
+        """Luu trang thai truoc khi ap dung step moi de PREV undo dung mot step."""
+        self.step_history.append({
+            "current_step_index": self.scenario_manager.current_step_index,
+            "is_paused": self.scenario_manager.is_paused,
+            "auto_advance_timer": self.auto_advance_timer,
+            "aircraft_entities": [
+                entity.get_state() for entity in self.aircraft_entities
+            ],
+            "log_entries": self.ui_manager.get_log_entries(),
+        })
+
+    def _restore_history_snapshot(self, snapshot: dict):
+        """Khoi phuc snapshot da luu boi _record_history_snapshot()."""
+        self.scenario_manager.current_step_index = snapshot["current_step_index"]
+        self.scenario_manager.is_paused = snapshot["is_paused"]
+        self.auto_advance_timer = snapshot["auto_advance_timer"]
+
+        entity_states = {
+            state["id"]: state for state in snapshot.get("aircraft_entities", [])
+        }
+        for entity in self.aircraft_entities:
+            state = entity_states.get(entity.id)
+            if state:
+                entity.restore_state(state)
+            self._sync_aircraft_state(entity)
+
+        self.ui_manager.set_log_entries(snapshot.get("log_entries", []))
+        self.ui_manager.set_stop_state(self.scenario_manager.is_paused)
+        self._refresh_current_status()
+
+    def _get_step_status(self, step: dict | None) -> str:
+        """Tao status text khong lam thay doi state."""
+        if not step:
+            if self.scenario_manager.current_step_index == -1:
+                return "Sẵn sàng bắt đầu kịch bản."
+            return "Scenario complete."
+
+        step_type = step.get("type")
+        step_id = step.get("id", "?")
+        if step_type == "MESSAGE":
+            return f"[{step_id}] {step.get('sender', '?')} -> {step.get('target', '?')}"
+        if step_type == "ACTION":
+            action = step.get("action")
+            ac_id = step.get("aircraft")
+            if action == "ROTATE":
+                return f"[{step_id}] {ac_id} ROTATE {step.get('value', 0)}deg"
+            if action == "MOVE_ALONG_PATH":
+                return f"[{step_id}] {ac_id} MOVE via '{step.get('path_name', '')}'"
+            return f"[{step_id}] ACTION: {action}"
+        return f"[{step_id}] {step_type}"
+
+    def _refresh_current_status(self):
+        """Cap nhat status theo step hien tai ma khong apply action/log."""
+        self.ui_manager.set_status(
+            self._get_step_status(self.scenario_manager.get_current_step())
+        )
 
     def setup(self):
         """Khoi phoi du lieu ban dau."""
@@ -50,11 +118,13 @@ class DTaxiApp:
             
             # Quet danh sach kich ban thuc te
             scenarios = self.get_available_scenarios()
-            self.ui_manager.set_scenario_list(scenarios)
 
             if scenarios:
-                self.load_scenario(scenarios[0])
+                default_scenario = self.get_default_scenario(scenarios)
+                self.ui_manager.set_scenario_list(scenarios, default_scenario)
+                self.load_scenario(default_scenario)
             else:
+                self.ui_manager.set_scenario_list(scenarios)
                 self.ui_manager.set_status("❌ Error: No scenarios found in data/scenarios")
                 
         except Exception as e:
@@ -71,6 +141,18 @@ class DTaxiApp:
         
         files = [f for f in os.listdir(self.SCENARIO_DIR) if f.endswith(".json")]
         return sorted(files)
+
+    def get_default_scenario(self, scenarios: list[str]) -> str:
+        """Uu tien scenario hop le de app khong khoi dong vao file loi."""
+        for filename in scenarios:
+            manager = ScenarioManager()
+            try:
+                manager.load_scenario(os.path.join(self.SCENARIO_DIR, filename))
+            except Exception:
+                continue
+            if not manager.validation_issues:
+                return filename
+        return scenarios[0]
 
     def load_scenario(self, filename: str):
         """Tai kich ban tu ten file."""
@@ -90,11 +172,24 @@ class DTaxiApp:
             self.aircraft_entities.append(entity)
 
         self.ui_manager.clear_log()
+        self.ui_manager.set_stop_state(False)
+        self.step_history = []
         # Voi index -1, setup ban dau se khong goi _apply_step hoac chi goi de show 'Ready'
         self._apply_step(current_step, start_movement=False)
 
         info = self.scenario_manager.get_scenario_info()
-        self.ui_manager.set_status(f"Loaded: {info.get('name', filename)}")
+        scenario_name = info.get("name") or filename
+        validation_issues = info.get("validation_issues", [])
+        if validation_issues:
+            self.ui_manager.add_log(
+                "SYSTEM",
+                f"Validation: {len(validation_issues)} issue(s). First: {validation_issues[0]}",
+            )
+            self.ui_manager.set_status(
+                f"Loaded with validation issues: {scenario_name}"
+            )
+        else:
+            self.ui_manager.set_status(f"Loaded: {scenario_name}")
 
     # ------------------------------------------------------------------
     # Xu ly Step Atomic
@@ -118,8 +213,7 @@ class DTaxiApp:
             text = step.get("text", "")
             if add_to_log:
                 self.ui_manager.add_log(sender, text, target)
-            label = f"[{step_id}] {sender} -> {target}"
-            self.ui_manager.set_status(label)
+            self.ui_manager.set_status(self._get_step_status(step))
 
         elif step_type == "ACTION":
             action = step.get("action")
@@ -130,27 +224,40 @@ class DTaxiApp:
                 for entity in self.aircraft_entities:
                     if entity.id == ac_id:
                         entity.set_angle(angle)
+                        self._sync_aircraft_state(entity)
                 
                 if add_to_log:
                     self.ui_manager.add_log("SYSTEM", f"{ac_id} rotated to {angle}°")
                 
-                self.ui_manager.set_status(
-                    f"[{step_id}] {ac_id} ROTATE {angle}deg")
+                self.ui_manager.set_status(self._get_step_status(step))
 
             elif action == "MOVE_ALONG_PATH":
                 path_name = step.get("path_name", "")
                 speed = step.get("speed") # Co the None de dung auto-speed
                 path_coords = self.scenario_manager.resolve_path(path_name)
-                
+
+                if not path_coords:
+                    if add_to_log:
+                        self.ui_manager.add_log(
+                            "SYSTEM",
+                            f"ERROR: path '{path_name}' not found or empty for {ac_id}.",
+                        )
+                    self.scenario_manager.stop()
+                    self.ui_manager.set_stop_state(True)
+                    self.ui_manager.set_status(
+                        f"[{step_id}] ERROR missing path '{path_name}'"
+                    )
+                    return
+
                 if add_to_log:
                     self.ui_manager.add_log("SYSTEM", f"{ac_id} moving via '{path_name}'")
 
-                if start_movement and path_coords:
+                if start_movement:
                     for entity in self.aircraft_entities:
                         if entity.id == ac_id:
                             entity.set_path(path_coords, speed)
-                self.ui_manager.set_status(
-                    f"[{step_id}] {ac_id} MOVE via '{path_name}'")
+                            self._sync_aircraft_state(entity)
+                self.ui_manager.set_status(self._get_step_status(step))
 
             else:
                 self.ui_manager.set_status(f"[{step_id}] ACTION: {action}")
@@ -168,40 +275,38 @@ class DTaxiApp:
             for entity in self.aircraft_entities:
                 if entity.id == ac_id and entity.is_moving:
                     entity.complete_path()
+                    self._sync_aircraft_state(entity)
                     self.ui_manager.set_status(f"Hành động hoàn tất: {ac_id}")
                     return # Dung lai o day, khong chuyen sang step tiep theo
+            if current.get("action") == "MOVE_ALONG_PATH":
+                path_name = current.get("path_name", "")
+                if not self.scenario_manager.resolve_path(path_name):
+                    self.scenario_manager.stop()
+                    self.ui_manager.set_stop_state(True)
+                    self.ui_manager.set_status(
+                        f"Không thể tiếp tục: thiếu path '{path_name}'"
+                    )
+                    return
 
         # 2. Neu khong co hanh dong chay, thuc hien step tiep theo nhu binh thuong
+        steps = self.scenario_manager.scenario_data.get("steps", [])
+        if self.scenario_manager.current_step_index >= len(steps) - 1:
+            self.ui_manager.set_status("Scenario complete.")
+            return
+
+        self._record_history_snapshot()
         step = self.scenario_manager.next_step()
+        self.ui_manager.set_stop_state(self.scenario_manager.is_paused)
         self._apply_step(step, start_movement=True)
 
     def handle_prev(self):
-        """Quay lai step truoc."""
-        current = self.scenario_manager.get_current_step()
-        if not current:
+        """Hoan tac dung mot step da apply gan nhat."""
+        if not self.step_history:
+            self.ui_manager.set_status("Không còn step để hoàn tác.")
             return
 
-        # 1. Hoan tac (Undo) step HIEN TAI
-        if current.get("type") in ["MESSAGE", "ACTION"]:
-            self.ui_manager.remove_last_log()
-            
-        if current.get("type") == "ACTION" and current.get("action") == "MOVE_ALONG_PATH":
-            path_coords = self.scenario_manager.resolve_path(current.get("path_name", ""))
-            if path_coords:
-                ac_id = current.get("aircraft")
-                for entity in self.aircraft_entities:
-                    if entity.id == ac_id:
-                        # Quay ve diem BAT DAU cua path (Undo move)
-                        entity.teleport(path_coords[0])
-
-        # 2. Lui pointer
-        step = self.scenario_manager.prev_step()
-        
-        # 3. Hien thi status cua step moi (nhung khong move hay ghi log)
-        if step:
-            self._apply_step(step, start_movement=False, add_to_log=False)
-        else:
-            self.ui_manager.set_status("Sẵn sàng bắt đầu kịch bản.")
+        snapshot = self.step_history.pop()
+        self._restore_history_snapshot(snapshot)
 
     def handle_stop(self):
         """Tam dung hoac tiep tuc mo phong (Toggle)."""
@@ -227,8 +332,11 @@ class DTaxiApp:
                     # Goc quay lay tu states cua manager (da auto-calc)
                     state = self.scenario_manager.aircraft_states.get(ac_id, {})
                     entity.set_angle(state.get("angle", 0.0))
+                    self._sync_aircraft_state(entity)
         
         self.ui_manager.clear_log()
+        self.ui_manager.set_stop_state(False)
+        self.step_history = []
         self.ui_manager.set_status("Scenario Reset. Sẵn sàng bắt đầu.")
         # Cho 2 giay de nguoi dung kip nhin thay trang thai reset truoc khi start lai
         self.auto_advance_timer = 2.0 
@@ -341,8 +449,7 @@ class DTaxiApp:
             if not self.scenario_manager.is_paused:
                 for entity in self.aircraft_entities:
                     entity.update(delta_time)
-                self.scenario_manager.update_aircraft_pos(
-                    entity.id, {"x": entity.x, "y": entity.y})
+                    self._sync_aircraft_state(entity)
 
             # Logic Auto Advance
             if self.is_auto_play and not self.scenario_manager.is_paused:

@@ -26,6 +26,7 @@ class WindowManager:
         self.on_scenario_change = on_scenario_change
         self.on_auto_play = on_auto_play
         self.on_speed_change = on_speed_change
+        self.log_entries = []
         
         self._setup_ui()
 
@@ -87,7 +88,7 @@ class WindowManager:
         self.btn_prev = ctk.CTkButton(self.control_frame, text="PREV", width=80, command=self.on_prev)
         self.btn_prev.pack(side="left", padx=10, expand=True)
 
-        self.btn_stop = ctk.CTkButton(self.control_frame, text="STOP", width=80, fg_color="#C0392B", hover_color="#922B21", command=self.on_stop)
+        self.btn_stop = ctk.CTkButton(self.control_frame, text="PAUSE", width=80, fg_color="#C0392B", hover_color="#922B21", command=self.on_stop)
         self.btn_stop.pack(side="left", padx=10, expand=True)
 
         self.btn_next = ctk.CTkButton(self.control_frame, text="NEXT", width=120, fg_color="green", hover_color="darkgreen", command=self.on_next)
@@ -100,18 +101,24 @@ class WindowManager:
         self.status_label = ctk.CTkLabel(self.root, text="Ready", font=("Roboto", 10))
         self.status_label.pack(side="bottom", pady=5)
 
-    def add_log(self, sender, text, target=None):
-        """Thêm một dòng tin nhắn vào log board với màu sắc phân biệt."""
+    def _get_log_tag(self, sender):
+        """Xac dinh tag mau theo nguoi gui."""
+        if sender in ["ATC", "KSV", "ATC/Ground"]:
+            return "atc"
+        if sender == "SYSTEM":
+            return "system"
+        if sender and sender != "?":
+            return "pilot"
+        return "system"
+
+    def _append_log_entry(self, entry):
+        """Chen mot log entry da co vao textbox."""
         self.log_box.configure(state="normal")
         
-        # Xác định tag màu dựa trên sender
-        tag_name = "system"
-        if sender in ["ATC", "KSV", "ATC/Ground"]:
-            tag_name = "atc"
-        elif sender == "SYSTEM":
-            tag_name = "system"
-        elif sender and sender != "?": # Mặc định là Pilot
-            tag_name = "pilot"
+        sender = entry.get("sender")
+        target = entry.get("target")
+        text = entry.get("text", "")
+        tag_name = self._get_log_tag(sender)
 
         header = f"[{sender}]"
         if target and target != "?":
@@ -125,12 +132,26 @@ class WindowManager:
         
         self.log_box.configure(state="disabled")
 
+    def _render_log_entries(self):
+        """Ve lai textbox tu danh sach log_entries."""
+        self.log_box.configure(state="normal")
+        self.log_box.delete("1.0", "end")
+        self.log_box.configure(state="disabled")
+        for entry in self.log_entries:
+            self._append_log_entry(entry)
+
+    def add_log(self, sender, text, target=None):
+        """Thêm một dòng tin nhắn vào log board với màu sắc phân biệt."""
+        entry = {"sender": sender, "text": text, "target": target}
+        self.log_entries.append(entry)
+        self._append_log_entry(entry)
+
     def set_stop_state(self, paused: bool):
-        """Cap nhat trang thai nut Stop/Resume."""
+        """Cap nhat trang thai nut Pause/Resume."""
         if paused:
             self.btn_stop.configure(text="RESUME", fg_color="#2980B9", hover_color="#2471A3")
         else:
-            self.btn_stop.configure(text="STOP", fg_color="#C0392B", hover_color="#922B21")
+            self.btn_stop.configure(text="PAUSE", fg_color="#C0392B", hover_color="#922B21")
 
     def set_status(self, text):
         self.status_label.configure(text=text)
@@ -149,26 +170,24 @@ class WindowManager:
 
     def remove_last_log(self):
         """Xóa block log cuối cùng khi người dùng nhấn PREV."""
-        self.log_box.configure(state="normal")
-        
-        # Tìm dấu xuống dòng kép (ngăn cách các message) từ cuối ngược lên
-        # end-1c: trước ký tự newline cuối cùng
-        # end-3c: bỏ qua cụm \n\n ở cuối message hiện tại để tìm cụm \n\n của message trước đó
-        idx = self.log_box._textbox.search("\n\n", "end-3c", "1.0", backwards=True)
-        
-        if idx:
-            # Nếu tìm thấy, xóa từ sau dấu \n\n đó đến hết
-            self.log_box.delete(f"{idx} + 2 chars", "end")
-        else:
-            # Nếu không tìm thấy (chỉ có 1 log), xóa sạch
-            self.log_box.delete("1.0", "end")
-            
-        self.log_box.configure(state="disabled")
+        if self.log_entries:
+            self.log_entries.pop()
+        self._render_log_entries()
 
     def clear_log(self):
+        self.log_entries = []
         self.log_box.configure(state="normal")
         self.log_box.delete("1.0", "end")
         self.log_box.configure(state="disabled")
+
+    def get_log_entries(self):
+        """Tra ve ban copy log de snapshot PREV."""
+        return [dict(entry) for entry in self.log_entries]
+
+    def set_log_entries(self, entries):
+        """Khoi phuc log tu snapshot."""
+        self.log_entries = [dict(entry) for entry in entries]
+        self._render_log_entries()
 
     def _handle_auto_play_toggle(self):
         """Callback khi toggle checkbox AUTO PLAY."""

@@ -25,8 +25,9 @@ python src/main.py
 ## 3. Cách vận hành
 - **Cửa sổ Map (Pygame):** Hiển thị trực quan máy bay và lộ trình di chuyển.
 - **Cửa sổ Controller (CustomTkinter):**
-    - Nhấn **NEXT** để chuyển bước tiếp theo. Tin nhắn AeroMACS sẽ xuất hiện và máy bay sẽ bắt đầu di chuyển mượt mà.
-    - Nhấn **PREV** để quay lại bước trước.
+    - Nhấn **NEXT** khi máy bay đang thực hiện action để hoàn tất action hiện tại. Khi không có action đang chạy, **NEXT** sẽ chuyển sang và bắt đầu step kế tiếp.
+    - Nhấn **PREV** để hoàn tác đúng một step gần nhất, bao gồm log và trạng thái máy bay.
+    - Nhấn **PAUSE/RESUME** để tạm dừng hoặc tiếp tục mô phỏng.
     - Nhấn **RESET** để đưa kịch bản về trạng thái ban đầu.
 
 ## 4. Kết quả hình ảnh
