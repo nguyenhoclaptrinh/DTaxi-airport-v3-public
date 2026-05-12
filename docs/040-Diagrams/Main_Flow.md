@@ -20,13 +20,25 @@ graph TD
         J --> K{Simulation Paused?}
         K -- No --> L[Cập nhật vị trí AircraftEntity]
         K -- Yes --> M[Giữ nguyên vị trí]
+        
         L --> N{Auto Play Mode?}
-        N -- Yes --> O[Kiểm tra điều kiện Auto-Next]
-        O --> P[Tự động chuyển Step nếu máy bay dừng]
+        M --> Q
+        N -- No --> Q
+        
+        N -- Yes --> O{Loại Step?}
+        O -- ACTION --> P{Máy bay dừng?}
+        O -- MESSAGE --> PA[Hết thời gian chờ?]
+        
+        P -- Yes --> NEXT[handle_next]
+        PA -- Yes --> NEXT
+        
+        NEXT --> FIN{Hết kịch bản?}
+        FIN -- Yes --> RESET[Chờ 3s & Reset Scenario]
+        FIN -- No --> Q
+        RESET --> I
     end
     
-    I --> Q[MapRenderer: Vẽ lại toàn bộ Scene]
-    Q --> R[WindowManager: Cập nhật Log & Status]
+    Q[MapRenderer: Vẽ lại toàn bộ Scene] --> R[WindowManager: Cập nhật Log & Status]
     
     R --> S{Sự kiện từ người dùng?}
     S -- NEXT/PREV --> T[Điều hướng kịch bản]
@@ -36,7 +48,8 @@ graph TD
     T --> I
     U --> I
     V --> I
-    P --> I
+    P -- No --> Q
+    PA -- No --> Q
 ```
 
 ## Giải thích các thành phần chính:
